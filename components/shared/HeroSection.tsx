@@ -5,9 +5,9 @@ import DtfButton from "../custom/DtfButton";
 export default function HeroSection() {
   return (
     <section className="py-10 layout">
-      <div className="flex flex-col md:flex-row justify-center items-start gap-10  text-center">
+      <div className="flex flex-col md:flex-row justify-center items-start gap-10 text-center">
         {/* Top Buttons */}
-        <div>
+        <div className="w-full md:w-2/3">
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <button className="px-4 py-2">
               <Image
@@ -98,42 +98,39 @@ export default function HeroSection() {
         </div>
 
         {/* Right Panel */}
-        <div className="flex justify-center md:justify-end w-full">
-          <div className="bg-[var(--green)] p-6 rounded-lg shadow-md w-full text-center">
+        <div className="flex justify-center md:justify-end w-full md:w-1/3">
+          <div className="bg-[var(--green)] p-4 rounded-lg shadow-md w-full text-center max-w-sm">
             <Image
               width={100}
               height={100}
-              src="/images/hero-section/hero-image-card.png"
+              src="/images/apperal-side-card.webp"
               alt="T-Shirt Design Preview"
-              className="w-full rounded mb-4"
+              className="w-full max-w-sm rounded mb-4"
             />
-            <div className="flex flex-col justify-center gap-10 text-white text-xl font-bold mb-2">
+            <div className="flex flex-col justify-center gap-10 text-white text-xl font-bold mb-4 max-w-sm">
               <DtfButton
                 title="Gang Sheet DTF"
-                url="/uv-stickers"
-                className="px-12 py-6 w-fit text-xl"
+                url="/gang-sheet-builder"
+                className="px-12 py-6 w-full text-xl max-w-sm"
               />
               <DtfButton
                 title="Individual Sheet DTF"
-                url="/individual-sheet"
-                className="px-12 py-6 w-fit  text-xl"
+                url="/individual-sheet-builder"
+                className="px-12 py-6 w-full text-xl max-w-sm"
               />
               <DtfButton
                 title="UV Stickers DTF"
                 url="/uv-stickers"
-                className="px-12 py-6 w-fit  text-xl"
+                className="px-12 py-6 w-full text-xl max-w-sm"
               />
             </div>
             <Image
               width={100}
               height={100}
-              src="/images/hero-section/hero-image-card.png"
+              src="/images/made-in-USA.webp"
               alt="T-Shirt Design Preview"
-              className="w-full rounded mb-4"
+              className="w-full max-w-sm rounded mb-4"
             />
-            <button className="bg-black text-white px-6 py-2 rounded">
-              Place Order
-            </button>
           </div>
         </div>
       </div>

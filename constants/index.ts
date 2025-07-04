@@ -34,6 +34,11 @@ export const navLinks = [
         name: "Individual Sheet Builder",
         href: "/individual-sheet-builder",
       },
+
+      {
+        name: "UV Stickers",
+        href: "/uv-stickers",
+      },
     ],
   },
 ];

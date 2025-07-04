@@ -21,13 +21,15 @@ const Header = () => {
     <header>
       <div className="layout">
         <div className="flex justify-between items-center py-4">
-          <Image
-            src="/icons/primary-logo.png"
-            alt="logo"
-            width={275}
-            height={175}
-            className="object-contain"
-          />
+          <Link href="/">
+            <Image
+              src="/icons/primary-logo.png"
+              alt="logo"
+              width={275}
+              height={175}
+              className="object-contain"
+            />
+          </Link>
           {/* Desktop Nav */}
           <div className="hidden lg:flex flex-col gap-4 mt-5">
             <div className="hidden lg:flex items-center gap-20">
