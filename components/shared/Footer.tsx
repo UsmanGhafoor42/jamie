@@ -8,12 +8,14 @@ const Footer = () => {
     <footer className="bg-black text-white">
       <div className="layout">
         <div className="flex flex-col items-center gap-10 py-20">
-          <Image
-            src="/icons/secondary-logo.png"
-            alt="logo"
-            width={152}
-            height={69}
-          />
+          <Link href="/">
+            <Image
+              src="/icons/secondary-logo.png"
+              alt="logo"
+              width={152}
+              height={69}
+            />
+          </Link>
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10">
             {footerLinks.map((link) => (
               <Link
