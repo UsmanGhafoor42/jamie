@@ -1,97 +1,276 @@
 "use client";
 
-import React, { useState, DragEvent } from "react";
+import React, { useState, DragEvent, ChangeEvent } from "react";
 import { UploadCloud } from "lucide-react";
+import Image from "next/image";
+
+const GANG_SHEET_SIZES = [
+  { label: '2" x 2"', value: "2x2", price: 1.05 },
+  { label: '3" x 3"', value: "3x3", price: 2.0 },
+  { label: '4" x 4"', value: "4x4", price: 3.0 },
+  { label: '5" x 5"', value: "5x5", price: 4.0 },
+  { label: '6" x 6"', value: "6x6", price: 5.0 },
+  { label: '7" x 7"', value: "7x7", price: 6.0 },
+  { label: '8" x 8"', value: "8x8", price: 7.0 },
+  { label: '9" x 9"', value: "9x9", price: 8.0 },
+  { label: '9" x 11"', value: "9x11", price: 8.5 },
+  { label: '10" x 10"', value: "10x10", price: 9.0 },
+  { label: '10" x 12"', value: "10x12", price: 9.5 },
+  { label: '11" x 11"', value: "11x11", price: 10.0 },
+  { label: '12" x 17"', value: "12x17", price: 10.0 },
+];
+
+const OPTIONS = [
+  { label: "Need help with artwork", value: "artwork", price: 10 },
+  { label: "Pre-cut transfers", value: "precut", price: 0.2 },
+  { label: "Rush fee", value: "rush", price: 25 },
+];
 
 const Page = () => {
-  const [file, setFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [orderNotes, setOrderNotes] = useState("");
+  const [quantity, setQuantity] = useState(1);
 
+  // Handle file upload (drag or select)
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setUploadedFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
   const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     if (e.dataTransfer.files.length > 0) {
-      setFile(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      setUploadedFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
-
   const handleDragOver = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
-    }
+  // Handle size selection
+  const handleSizeSelect = (value: string) => {
+    setSelectedSize(value);
   };
+
+  // Handle option checkboxes
+  const handleOptionChange = (value: string) => {
+    setSelectedOptions((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
+
+  // Calculate total price
+  const basePrice =
+    GANG_SHEET_SIZES.find((s) => s.value === selectedSize)?.price || 0;
+  const optionsPrice = selectedOptions.reduce((sum, opt) => {
+    const found = OPTIONS.find((o) => o.value === opt);
+    return sum + (found ? found.price : 0);
+  }, 0);
+  const total = ((basePrice + optionsPrice) * quantity).toFixed(2);
+
+  // Handle add to cart
+  const handleAddToCart = () => {
+    const data = {
+      image: uploadedFile,
+      imagePreview,
+      size: selectedSize,
+      options: selectedOptions,
+      orderNotes,
+      quantity,
+      total,
+    };
+    // In real app, send to backend/cart
+    console.log("Cart Data:", data);
+    alert("Order added to cart! Check console for data.");
+  };
+
   return (
     <main className="p-4 lg:p-12 layout">
-      <h1 className="text-2xl md:text-5xl font-poppins font-bold text-center mb-8">
-        Individual Design File
-      </h1>
-      <div className="grid md:grid-cols-2 grid-cols-1 gap-8 w-full max-w-6xl mx-auto justify-center">
-        {/* Upload Box */}
-        <label
-          htmlFor="fileInput"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          className="border-2 border-dashed border-white bg-[var(--gray)] text-white rounded-xl flex flex-col items-center justify-center px-8 py-16 cursor-pointer transition hover:bg-gray-500 text-center"
-        >
-          <UploadCloud className="w-10 h-10 mb-4" />
-          <p className="text-lg font-semibold mb-2">
-            Upload Individual Sheet Design File
-          </p>
-          <p className="text-sm">Click here or drag and drop file</p>
-          <input
-            id="fileInput"
-            type="file"
-            onChange={handleFileChange}
-            className="hidden"
+      <div className="flex flex-col lg:flex-row gap-10">
+        {/* Left: Image preview or placeholder */}
+        <div className="flex-1 flex flex-col items-center justify-center mb-8 lg:mb-0">
+          <Image
+            width={500}
+            height={500}
+            src="/images/indivdual-sheet-DTF.webp"
+            alt="Individual Sheet"
+            className="object-cover"
           />
-          {file && <p className="mt-4 text-sm text-green-300">{file.name}</p>}
-        </label>
-
-        {/* File Requirements */}
-        <div className="border border-gray-300 bg-white rounded-xl p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-center mb-4">
-            File Requirements
-          </h2>
-          <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
-            <div>
-              <h3 className="font-semibold underline mb-2">
-                Available Film Size
-              </h3>
-              <ul className="space-y-1">
-                <li>Small - 11.00&quot; x 12.50&quot;</li>
-                <li>Medium - 22.50&quot; x 12.50&quot;</li>
-                <li>Large - 22.50&quot; x 25.00&quot;</li>
-                <li>Extra Large - 22.50&quot; x 60.00&quot;</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold underline mb-2">
-                File Requirements
-              </h3>
-              <ul className="space-y-1">
-                <li>Max File Size 100 Megabytes</li>
-                <li>png - tif - pdf - eps - ai</li>
-                <li>Transparent Background</li>
-                <li>Min 300dpi & Max 600dpi</li>
-              </ul>
-            </div>
+          <div className="w-full max-w-sm aspect-[1.1/1] bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden border border-gray-300">
+            {imagePreview ? (
+              <Image
+                width={100}
+                height={100}
+                src={imagePreview}
+                alt="Preview"
+                className="object-fit w-full h-full"
+              />
+            ) : (
+              <span className="text-gray-400 text-lg">Image Preview</span>
+            )}
           </div>
-          <p className="text-xs text-center mt-4 italic text-gray-500">
-            All text should be converted to curve
-          </p>
+          {/* Custom upload */}
+          <label
+            htmlFor="fileInput"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            className="mt-6 border-2 border-dashed border-gray-400 bg-gray-50 text-gray-700 rounded-xl flex flex-col items-center justify-center px-8 py-8 cursor-pointer transition hover:bg-gray-100 text-center w-full max-w-md"
+          >
+            <UploadCloud className="w-10 h-10 mb-2" />
+            <span className="font-semibold mb-1">Upload Your Design File</span>
+            <span className="text-xs mb-2">Click or drag and drop file</span>
+            <input
+              id="fileInput"
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {uploadedFile && (
+              <span className="mt-2 text-[var(--green)] text-sm">
+                {uploadedFile.name}
+              </span>
+            )}
+          </label>
         </div>
-      </div>
-      <div className="mt-12 flex flex-col items-center justify-center">
-        <h2 className="text-2xl md:text-5xl font-bold font-poppins text-center mb-4">
-          Your DTF Designs History
-        </h2>
-        <p className="text-center text-gray-500 font-poppins underline italic">
-          Pdf and eps files may show a white background instead of transparent
-          background. This is the problem in converting a file to thumbnail
-          display. I&apos;ll print transparent on a transfer.
-        </p>
+        {/* Right: Form */}
+        <div className="flex-1 max-w-xl mx-auto">
+          <h1 className="text-2xl md:text-4xl font-bold mb-2">
+            Individual Design File
+          </h1>
+          <p className="text-gray-700 mb-2">
+            DTF (Direct to Film) printing is incredibly versatile and works on a
+            wide range of materials, making it ideal for both apparel and
+            promotional items. It performs exceptionally well on cotton,
+            polyester, and cotton/poly blends, delivering vibrant colors and
+            strong wash durability—perfect for t-shirts, hoodies, and tote bags.
+            Tri-blend fabrics also work well when paired with high-quality film
+            and powder. DTF printing isn’t limited to clothing; it’s great for
+            canvas and denim items like aprons, backpacks, and jackets, as well
+            as hats with flat areas, especially 5-panel or flat-bill caps. It
+            can also be used on shoes (such as canvas sneakers), tote bags, and
+            even koozies, provided they can handle the press heat. While more
+            challenging, DTF can also adhere to nylon, wood, or leather when
+            tested carefully with the right adhesive powder and press settings.
+            For best results, use quality materials, avoid overheating, and
+            apply even pressure to ensure long-lasting, professional prints
+            across a wide range of substrates.
+          </p>
+          <div className="text-xl font-bold mb-2">
+            ${GANG_SHEET_SIZES[0].price.toFixed(2)} – $
+            {GANG_SHEET_SIZES[GANG_SHEET_SIZES.length - 1].price.toFixed(2)}
+          </div>
+
+          <h1 className="text-2xl text-[var(--gray)] md:text-4xl font-bold mb-2">
+            Additional Information
+          </h1>
+          <div className="flex flex-col gap-6">
+            <div>
+              <h2 className="font-bold">
+                Simplify Your Printing with Custom-Sized DTF Transfers!
+              </h2>
+              <p>
+                Upload your design, choose the transfer size that suits your
+                project, and we’ll take care of the rest—creating a personalized
+                DTF just for you.
+              </p>
+            </div>
+            <p>
+              Need a size you don’t see listed? No worries! Select the closest
+              match and include a note with your exact dimensions. You can also
+              ask us to remove the background for a polished, pro-ready finish.
+            </p>
+            <p>
+              Your custom DTF transfers will arrive ready to apply using any
+              heat press—quick, easy, and made to match your vision.
+            </p>
+          </div>
+
+          <h2 className="text-lg font-semibold mt-6 mb-2">
+            Indivdual Sheet : Select Size
+          </h2>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {GANG_SHEET_SIZES.map((size) => (
+              <button
+                key={size.value}
+                type="button"
+                className={`px-3 py-2 rounded border text-sm font-medium transition-all ${
+                  selectedSize === size.value
+                    ? "bg-[var(--green)] text-white border-[var(--green)]"
+                    : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
+                }`}
+                onClick={() => handleSizeSelect(size.value)}
+              >
+                {size.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 mb-4">
+            {OPTIONS.map((opt) => (
+              <label
+                key={opt.value}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedOptions.includes(opt.value)}
+                  onChange={() => handleOptionChange(opt.value)}
+                  className="accent-[var(--green)] w-5 h-5"
+                />
+                <span className="font-medium">{opt.label}</span>
+                <span className="text-xs text-gray-500">
+                  (+${opt.price.toFixed(2)})
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">Order Notes</label>
+            <textarea
+              className="w-full border rounded p-2 min-h-[60px]"
+              placeholder="Need to give more info about your order or do it here"
+              value={orderNotes}
+              onChange={(e) => setOrderNotes(e.target.value)}
+            />
+          </div>
+          <div className="mb-4 flex items-center gap-4">
+            <label className="font-medium">Quantity:</label>
+            <select
+              className="border rounded px-2 py-1"
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+            >
+              {[...Array(10)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {String(i + 1).padStart(2, "0")}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center justify-between mt-6 mb-2">
+            <span className="text-lg font-semibold">Total:</span>
+            <span className="text-2xl font-bold text-[var(--green)]">
+              ${total}
+            </span>
+          </div>
+          <button
+            className="w-full bg-[var(--green)] text-white font-bold py-3 rounded-lg mt-2 hover:bg-green-700 transition"
+            onClick={handleAddToCart}
+            disabled={!selectedSize || !uploadedFile}
+          >
+            Add to cart
+          </button>
+          <div className="text-xs text-gray-500 mt-2">
+            * Please select a size and upload your design file to add to cart.
+          </div>
+        </div>
       </div>
     </main>
   );
