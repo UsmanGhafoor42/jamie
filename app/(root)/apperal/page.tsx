@@ -3,7 +3,8 @@ import React from "react";
 import Image from "next/image";
 import DtfButton from "@/components/custom/DtfButton";
 import CustomButton from "@/components/custom/CustomButton";
-
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 // Dummy Product Type
 interface Product {
   id: number;
@@ -73,22 +74,27 @@ const products: Product[] = [
   },
 ];
 
-const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
-  <div className="bg-white rounded-lg shadow-md p-3">
-    <div
-    // href={`/apperal/${product.id}`}
-    // href={"/"}
-    >
-      <Image
-        src={product.image}
-        alt={product.title}
-        width={150}
-        height={150}
-        className="object-cover w-full"
-      />
-      <div className="flex flex-col gap-2">
-        <h3 className="font-semibold mt-2">{product.title}</h3>
-        {/* <div className="text-sm font-semibold text-gray-500">
+const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
+  const router = useRouter();
+  const handleClick = () => {
+    router.push(`/apperal/${product.id}`);
+  };
+  return (
+    <div className="bg-white rounded-lg shadow-md p-3">
+      <div
+      // href={`/apperal/${product.id}`}
+      // href={"/"}
+      >
+        <Image
+          src={product.image}
+          alt={product.title}
+          width={150}
+          height={150}
+          className="object-cover w-full"
+        />
+        <div className="flex flex-col gap-2">
+          <h3 className="font-semibold mt-2">{product.title}</h3>
+          {/* <div className="text-sm font-semibold text-gray-500">
           <span className="font-bold">Size:</span>
           {product.size.map((size, index) => (
             <span key={index} className="p-1 rounded bg-gray-300 ml-1">
@@ -96,7 +102,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
             </span>
           ))}
         </div> */}
-        {/* <div className="text-sm font-semibold text-gray-500">Color:</div>
+          {/* <div className="text-sm font-semibold text-gray-500">Color:</div>
         <div className="flex space-x-1 mt-1">
           {product.colors.map((color, index) => (
             <span
@@ -112,15 +118,16 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
         <div className="text-[var(--green)] font-bold text-sm">
           {product.price}
         </div> */}
-        <CustomButton
-          onClick={() => {}}
-          title="Select Options"
-          className="w-fit"
-        />
+          <CustomButton
+            onClick={handleClick}
+            title="Select Options"
+            className="w-fit"
+          />
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Page: React.FC = () => {
   return (
