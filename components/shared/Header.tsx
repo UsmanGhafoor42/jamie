@@ -18,11 +18,11 @@ const Header = () => {
     null
   );
 
-const router = useRouter();
+  const router = useRouter();
 
-const handleClick = () =>{
-  router.push('/auth/login')
-}
+  const handleClick = () => {
+    router.push("/auth/login");
+  };
 
   return (
     <header>
@@ -82,7 +82,9 @@ const handleClick = () =>{
                 )
               )}
               <div className="flex items-center gap-4">
-                <ShoppingCart className="w-6 h-6" />
+                <Link href={"/cart"}>
+                  <ShoppingCart className="w-6 h-6" />
+                </Link>
                 <CustomButton title="Login" onClick={handleClick} />
               </div>
             </div>
@@ -90,7 +92,9 @@ const handleClick = () =>{
           </div>
           {/* Mobile Nav */}
           <div className="flex lg:hidden items-center gap-2">
-            <ShoppingCart className="w-6 h-6" />
+            <Link href={"/cart"}>
+              <ShoppingCart className="w-6 h-6" />
+            </Link>
             <Sheet>
               <SheetTrigger asChild>
                 <button aria-label="Open menu">
