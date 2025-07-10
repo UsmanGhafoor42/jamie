@@ -3,7 +3,6 @@ import React from "react";
 import Image from "next/image";
 import DtfButton from "@/components/custom/DtfButton";
 import CustomButton from "@/components/custom/CustomButton";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 // Dummy Product Type
 interface Product {

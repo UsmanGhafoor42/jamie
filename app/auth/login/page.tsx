@@ -1,12 +1,13 @@
-'use client'
-import Link from 'next/link';
-import React, { useState } from 'react'
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import React, { useState } from "react";
 
-const page = () => {
+const Page = () => {
   const [form, setForm] = useState({
-    fullname: '',
-    email: '',
-    password: '',
+    fullname: "",
+    email: "",
+    password: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,10 +25,23 @@ const page = () => {
 
   return (
     <section className="flex justify-center items-center min-h-screen bg-gray-50 font-poppins">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-8 rounded shadow-md w-full max-w-md"
+      >
+        <Link href="/">
+          <Image
+            src="/icons/secondary-logo.png"
+            alt="logo"
+            width={152}
+            height={69}
+          />
+        </Link>
+        <h2 className="text-2xl font-bold my-6 text-center">Login</h2>
         <div className="mb-4">
-          <label htmlFor="email" className="block text-gray-700 mb-2">Email</label>
+          <label htmlFor="email" className="block text-gray-700 mb-2">
+            Email
+          </label>
           <input
             type="email"
             id="email"
@@ -39,7 +53,9 @@ const page = () => {
           />
         </div>
         <div className="mb-6">
-          <label htmlFor="password" className="block text-gray-700 mb-2">Password</label>
+          <label htmlFor="password" className="block text-gray-700 mb-2">
+            Password
+          </label>
           <input
             type="password"
             id="password"
@@ -56,10 +72,18 @@ const page = () => {
         >
           Login
         </button>
-        <h4 className='text-sm font-poppins'>Don't have an account <Link className='font-bold text-[var(--green))]' href={'/auth/register'}>Register now</Link></h4>
+        <h4 className="text-sm font-poppins text-right mt-4">
+          Don&apos;t have an account{" "}
+          <Link
+            className="font-bold text-[var(--green))] uppercase"
+            href={"/auth/register"}
+          >
+            Register now
+          </Link>
+        </h4>
       </form>
     </section>
   );
-}
+};
 
-export default page
+export default Page;
