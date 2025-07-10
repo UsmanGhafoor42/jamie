@@ -11,11 +11,18 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState<string | null>(
     null
   );
+
+const router = useRouter();
+
+const handleClick = () =>{
+  router.push('/auth/login')
+}
 
   return (
     <header>
@@ -76,7 +83,7 @@ const Header = () => {
               )}
               <div className="flex items-center gap-4">
                 <ShoppingCart className="w-6 h-6" />
-                <CustomButton title="Login" onClick={() => {}} />
+                <CustomButton title="Login" onClick={handleClick} />
               </div>
             </div>
             <hr className="border-black border-2" />
