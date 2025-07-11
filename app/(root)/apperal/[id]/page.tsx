@@ -10,8 +10,8 @@ const SHIRT_SIZES = [
   { label: "M", value: "M", price: 3.75 },
   { label: "L", value: "L", price: 3.75 },
   { label: "XL", value: "XL", price: 3.75 },
-  { label: "XXL", value: "XXL", price: 3.75 },
-  { label: "3XL", value: "3XL", price: 5.75 },
+  { label: "XXL", value: "XXL", price: 5.75 },
+  { label: "3XL", value: "3XL", price: 7.75 },
 ];
 
 // Shirt color swatches
@@ -34,7 +34,7 @@ const SHIRT_COLORS = [
 const STICKER_LOCATIONS = [
   { label: "Left Chest", value: "left_chest", price: 3.75 },
   { label: "Right Chest", value: "right_chest", price: 3.75 },
-  { label: "Middle Chest", value: "middle_chest", price: 5.65 },
+  { label: "Middle Chest", value: "middle_chest", price: 5.55 },
   { label: "Full Front", value: "full_front", price: 6.0 },
   { label: "Extra Large Front", value: "extra_large_front", price: 8.5 },
   { label: "Full Back", value: "full_back", price: 8.0 },
@@ -76,6 +76,15 @@ const Page = () => {
       {} as Record<StickerKey, File | null>
     )
   );
+  // Sticker quantities per location
+  const [stickerQuantities, setStickerQuantities] = useState<
+    Record<StickerKey, number>
+  >(
+    STICKER_LOCATIONS.reduce(
+      (acc, loc) => ({ ...acc, [loc.value]: 0 }),
+      {} as Record<StickerKey, number>
+    )
+  );
   // Extra options
   const [selectedOptions, setSelectedOptions] = useState<OptionKey[]>([]);
   // Order notes
@@ -92,6 +101,16 @@ const Page = () => {
   // Handle sticker file upload
   const handleStickerChange = (loc: StickerKey, file: File | null) => {
     setStickers((prev) => ({ ...prev, [loc]: file }));
+    // Reset quantity if file is removed
+    if (!file) setStickerQuantities((prev) => ({ ...prev, [loc]: 0 }));
+    // Set default quantity to 1 if file is uploaded and quantity is 0
+    if (file && stickerQuantities[loc] === 0)
+      setStickerQuantities((prev) => ({ ...prev, [loc]: 1 }));
+  };
+
+  // Handle sticker quantity change
+  const handleStickerQtyChange = (loc: StickerKey, qty: number) => {
+    setStickerQuantities((prev) => ({ ...prev, [loc]: qty }));
   };
 
   // Handle extra options
@@ -107,7 +126,10 @@ const Page = () => {
     0
   );
   const stickersTotal = STICKER_LOCATIONS.reduce(
-    (sum, loc) => (stickers[loc.value] ? sum + loc.price : sum),
+    (sum, loc) =>
+      stickers[loc.value] && stickerQuantities[loc.value] > 0
+        ? sum + loc.price * stickerQuantities[loc.value]
+        : sum,
     0
   );
   const optionsTotal = EXTRA_OPTIONS.reduce(
@@ -123,6 +145,9 @@ const Page = () => {
       color: selectedColor,
       stickers: Object.fromEntries(
         Object.entries(stickers).filter(([, v]) => v)
+      ),
+      stickerQuantities: Object.fromEntries(
+        Object.entries(stickerQuantities).filter(([, qty]) => qty > 0)
       ),
       options: selectedOptions,
       orderNotes,
@@ -258,7 +283,7 @@ const Page = () => {
                   <span className="text-xs text-gray-500">
                     Sticker Fee (${loc.price.toFixed(2)})
                   </span>
-                  <div className="flex-1">
+                  <div className="flex-1 flex items-center gap-2">
                     <label
                       htmlFor={`sticker-upload-${loc.value}`}
                       className={`border-2 border-dashed rounded-lg flex items-center gap-2 px-3 py-2 cursor-pointer transition hover:bg-gray-50 ${
@@ -302,6 +327,32 @@ const Page = () => {
                         </button>
                       )}
                     </label>
+                    {/* Quantity input */}
+                    <input
+                      type="number"
+                      min={0}
+                      max={99}
+                      value={stickerQuantities[loc.value]}
+                      onChange={(e) =>
+                        handleStickerQtyChange(
+                          loc.value,
+                          Number(e.target.value)
+                        )
+                      }
+                      className="w-16 border rounded px-2 py-1 text-center"
+                      disabled={!stickers[loc.value]}
+                      placeholder="Qty"
+                    />
+                    {/* Subtotal for this sticker location */}
+                    {stickers[loc.value] &&
+                      stickerQuantities[loc.value] > 0 && (
+                        <span className="text-xs text-gray-700">
+                          = $
+                          {(loc.price * stickerQuantities[loc.value]).toFixed(
+                            2
+                          )}
+                        </span>
+                      )}
                   </div>
                 </div>
               ))}
