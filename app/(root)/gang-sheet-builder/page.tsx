@@ -90,14 +90,14 @@ const Page = () => {
       <div className="flex flex-col lg:flex-row gap-10">
         {/* Left: Image preview or placeholder */}
         <div className="flex-1 flex flex-col items-center justify-center mb-8 lg:mb-0">
-          <Image
+          {/* <Image
             width={500}
             height={500}
             src="/images/Gang-Sheet-HMD.webp"
             alt="Gang Sheet"
             className="object-cover"
-          />
-          <div className="w-full max-w-md aspect-[1.1/1] bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden border border-gray-300">
+          /> */}
+          <div className="w-full max-w-xl aspect-[1.1/1] bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden border border-gray-300">
             {imagePreview ? (
               <Image
                 width={100}
@@ -107,11 +107,18 @@ const Page = () => {
                 className="object-fit w-full h-full"
               />
             ) : (
-              <span className="text-gray-400 text-lg">Image Preview</span>
+              // <span className="text-gray-400 text-lg">Image Preview</span>
+              <Image
+                width={500}
+                height={500}
+                src="/images/Gang-Sheet-HMD.webp"
+                alt="Gang Sheet"
+                className="object-cover"
+              />
             )}
           </div>
           {/* Custom upload */}
-          <label
+          {/* <label
             htmlFor="fileInput"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -132,7 +139,7 @@ const Page = () => {
                 {uploadedFile.name}
               </span>
             )}
-          </label>
+          </label> */}
         </div>
         {/* Right: Form */}
         <div className="flex-1 max-w-xl mx-auto">
@@ -184,6 +191,32 @@ const Page = () => {
             <h2 className="font-bold">
               👉 Get more done, your way—start uploading now!
             </h2>
+          </div>
+          <div>
+            <label
+              htmlFor="fileInput"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="mt-6 border-2 border-dashed border-gray-400 bg-gray-50 text-gray-700 rounded-xl flex flex-col items-center justify-center px-8 py-8 cursor-pointer transition hover:bg-gray-100 text-center w-full max-w-md"
+            >
+              <UploadCloud className="w-10 h-10 mb-2" />
+              <span className="font-semibold mb-1">
+                Upload Your Design File
+              </span>
+              <span className="text-xs mb-2">Click or drag and drop file</span>
+              <input
+                id="fileInput"
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              {uploadedFile && (
+                <span className="mt-2 text-[var(--green)] text-sm">
+                  {uploadedFile.name}
+                </span>
+              )}
+            </label>
           </div>
 
           <h2 className="text-lg font-semibold mt-6 mb-2">
