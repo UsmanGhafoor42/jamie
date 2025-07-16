@@ -89,7 +89,7 @@ const Page = () => {
     <main className="p-4 lg:p-12 layout">
       <div className="flex flex-col lg:flex-row gap-10">
         {/* Left: Image preview or placeholder */}
-        <div className="flex-1 flex flex-col items-center justify-center mb-8 lg:mb-0">
+        <div className="flex-1 flex flex-col items-center justify-start mb-8 lg:mb-0">
           {/* <Image
             width={500}
             height={500}
@@ -268,17 +268,31 @@ const Page = () => {
           </div>
           <div className="mb-4 flex items-center gap-4">
             <label className="font-medium">Quantity:</label>
-            <select
-              className="border rounded px-2 py-1"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-            >
-              {[...Array(10)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {String(i + 1).padStart(2, "0")}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="w-8 h-8 rounded-full border border-[var(--green)] text-[var(--green)] flex items-center justify-center text-xl font-bold hover:bg-[var(--green)] hover:text-white transition"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                aria-label="Decrease quantity"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                className="w-fit text-center border rounded px-2 py-1 font-semibold"
+              />
+              <button
+                type="button"
+                className="w-8 h-8 rounded-full border border-[var(--green)] text-[var(--green)] flex items-center justify-center text-xl font-bold hover:bg-[var(--green)] hover:text-white transition"
+                onClick={() => setQuantity((q) => Math.min(q + 1))}
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
           </div>
           <div className="flex items-center justify-between mt-6 mb-2">
             <span className="text-lg font-semibold">Total:</span>

@@ -76,15 +76,6 @@ const Page = () => {
       {} as Record<StickerKey, File | null>
     )
   );
-  // Sticker quantities per location
-  const [stickerQuantities, setStickerQuantities] = useState<
-    Record<StickerKey, number>
-  >(
-    STICKER_LOCATIONS.reduce(
-      (acc, loc) => ({ ...acc, [loc.value]: 0 }),
-      {} as Record<StickerKey, number>
-    )
-  );
   // Extra options
   const [selectedOptions, setSelectedOptions] = useState<OptionKey[]>([]);
   // Order notes
@@ -101,16 +92,6 @@ const Page = () => {
   // Handle sticker file upload
   const handleStickerChange = (loc: StickerKey, file: File | null) => {
     setStickers((prev) => ({ ...prev, [loc]: file }));
-    // Reset quantity if file is removed
-    if (!file) setStickerQuantities((prev) => ({ ...prev, [loc]: 0 }));
-    // Set default quantity to 1 if file is uploaded and quantity is 0
-    if (file && stickerQuantities[loc] === 0)
-      setStickerQuantities((prev) => ({ ...prev, [loc]: 1 }));
-  };
-
-  // Handle sticker quantity change
-  const handleStickerQtyChange = (loc: StickerKey, qty: number) => {
-    setStickerQuantities((prev) => ({ ...prev, [loc]: qty }));
   };
 
   // Handle extra options
@@ -125,10 +106,14 @@ const Page = () => {
     (sum, s) => sum + sizeQuantities[s.value] * s.price,
     0
   );
+  const totalShirtQty = Object.values(sizeQuantities).reduce(
+    (sum, qty) => sum + qty,
+    0
+  );
   const stickersTotal = STICKER_LOCATIONS.reduce(
     (sum, loc) =>
-      stickers[loc.value] && stickerQuantities[loc.value] > 0
-        ? sum + loc.price * stickerQuantities[loc.value]
+      stickers[loc.value] && totalShirtQty > 0
+        ? sum + loc.price * totalShirtQty
         : sum,
     0
   );
@@ -145,9 +130,6 @@ const Page = () => {
       color: selectedColor,
       stickers: Object.fromEntries(
         Object.entries(stickers).filter(([, v]) => v)
-      ),
-      stickerQuantities: Object.fromEntries(
-        Object.entries(stickerQuantities).filter(([, qty]) => qty > 0)
       ),
       options: selectedOptions,
       orderNotes,
@@ -167,7 +149,7 @@ const Page = () => {
     <main className="p-4 lg:p-12 layout">
       <div className="flex flex-col lg:flex-row gap-10">
         {/* Left: Product image */}
-        <div className="flex-1 flex flex-col items-center justify-center mb-8 lg:mb-0">
+        <div className="flex-1 flex flex-col items-center justify-start mb-8 lg:mb-0">
           <Image
             width={500}
             height={500}
@@ -327,32 +309,12 @@ const Page = () => {
                         </button>
                       )}
                     </label>
-                    {/* Quantity input */}
-                    <input
-                      type="number"
-                      min={0}
-                      max={99}
-                      value={stickerQuantities[loc.value]}
-                      onChange={(e) =>
-                        handleStickerQtyChange(
-                          loc.value,
-                          Number(e.target.value)
-                        )
-                      }
-                      className="w-16 border rounded px-2 py-1 text-center"
-                      disabled={!stickers[loc.value]}
-                      placeholder="Qty"
-                    />
                     {/* Subtotal for this sticker location */}
-                    {stickers[loc.value] &&
-                      stickerQuantities[loc.value] > 0 && (
-                        <span className="text-xs text-gray-700">
-                          = $
-                          {(loc.price * stickerQuantities[loc.value]).toFixed(
-                            2
-                          )}
-                        </span>
-                      )}
+                    {stickers[loc.value] && totalShirtQty > 0 && (
+                      <span className="text-xs text-gray-700">
+                        = ${(loc.price * totalShirtQty).toFixed(2)}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

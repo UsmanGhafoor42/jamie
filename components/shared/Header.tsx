@@ -2,7 +2,7 @@
 import { navLinks } from "@/constants";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import CustomButton from "@/components/custom/CustomButton";
 import { ShoppingCart, Menu } from "lucide-react";
 import {
@@ -17,12 +17,28 @@ const Header = () => {
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState<string | null>(
     null
   );
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
 
   const handleClick = () => {
     router.push("/auth/login");
   };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header>
@@ -42,8 +58,20 @@ const Header = () => {
             <div className="hidden lg:flex items-center gap-20">
               {navLinks.map((link) =>
                 link.subLinks ? (
-                  <div key={link.name} className="relative group">
-                    <button className="text-lg font-poppins flex items-center gap-1">
+                  <div
+                    key={link.name}
+                    className="relative group"
+                    ref={dropdownRef}
+                  >
+                    <button
+                      type="button"
+                      className="text-lg font-poppins flex items-center gap-1"
+                      onClick={() =>
+                        setOpenDropdown(
+                          openDropdown === link.name ? null : link.name
+                        )
+                      }
+                    >
                       {link.name}
                       <svg
                         className="w-4 h-4 ml-1"
@@ -59,17 +87,20 @@ const Header = () => {
                         />
                       </svg>
                     </button>
-                    <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-20">
-                      {link.subLinks.map((sub) => (
-                        <Link
-                          href={sub.href ?? "/"}
-                          key={sub.name}
-                          className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                        >
-                          {sub.name}
-                        </Link>
-                      ))}
-                    </div>
+                    {openDropdown === link.name && (
+                      <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                        {link.subLinks.map((sub) => (
+                          <Link
+                            href={sub.href ?? "/"}
+                            key={sub.name}
+                            className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                            onClick={() => setOpenDropdown(null)} // Close on link click
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <Link
