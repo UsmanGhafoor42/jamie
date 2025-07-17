@@ -4,6 +4,24 @@ export const navLinks = [
     href: "/",
   },
   {
+    name: "Designs",
+    subLinks: [
+      {
+        name: "Gang Sheet Builder",
+        href: "/gang-sheet-builder",
+      },
+      {
+        name: "Individual Sheet Builder",
+        href: "/individual-sheet-builder",
+      },
+
+      {
+        name: "UV Stickers",
+        href: "/uv-stickers",
+      },
+    ],
+  },
+  {
     name: "Pricing",
     href: "/pricing",
   },
@@ -22,24 +40,6 @@ export const navLinks = [
   {
     name: "Apperal",
     href: "/apperal",
-  },
-  {
-    name: "Designs",
-    subLinks: [
-      {
-        name: "Gang Sheet Builder",
-        href: "/gang-sheet-builder",
-      },
-      {
-        name: "Individual Sheet Builder",
-        href: "/individual-sheet-builder",
-      },
-
-      {
-        name: "UV Stickers",
-        href: "/uv-stickers",
-      },
-    ],
   },
 ];
 

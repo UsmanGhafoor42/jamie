@@ -55,7 +55,7 @@ const Header = () => {
           </Link>
           {/* Desktop Nav */}
           <div className="hidden lg:flex flex-col gap-4 mt-5">
-            <div className="hidden lg:flex items-center gap-20">
+            <div className="hidden lg:flex items-center gap-16">
               {navLinks.map((link) =>
                 link.subLinks ? (
                   <div

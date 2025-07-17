@@ -7,7 +7,7 @@ interface CustomButtonProps {
 const CustomButton = ({ title, onClick, className }: CustomButtonProps) => {
   return (
     <button
-      className={` "text-base px-4 py-2 bg-[var(--green)] rounded-md text-white font-poppins" ${className}`}
+      className={` "text-base px-4 py-2 bg-[var(--green)] rounded-md text-white font-poppins cursor-pointer" ${className}`}
       onClick={onClick}
     >
       {title}

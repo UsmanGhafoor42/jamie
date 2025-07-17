@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, DragEvent, ChangeEvent } from "react";
+import React, {
+  useState,
+  DragEvent,
+  ChangeEvent,
+  useRef,
+  useEffect,
+} from "react";
 import { UploadCloud } from "lucide-react";
 import Image from "next/image";
 
@@ -27,6 +33,22 @@ const Page = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [orderNotes, setOrderNotes] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [isSizeDropdownOpen, setIsSizeDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSizeDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Handle file upload (drag or select)
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -222,21 +244,63 @@ const Page = () => {
           <h2 className="text-lg font-semibold mt-6 mb-2">
             Gang Sheet : Select Size
           </h2>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {GANG_SHEET_SIZES.map((size) => (
-              <button
-                key={size.value}
-                type="button"
-                className={`px-3 py-2 rounded border text-sm font-medium transition-all ${
-                  selectedSize === size.value
-                    ? "bg-[var(--green)] text-white border-[var(--green)]"
-                    : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
-                }`}
-                onClick={() => handleSizeSelect(size.value)}
+          <div className="relative mb-4" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsSizeDropdownOpen(!isSizeDropdownOpen)}
+              className="w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-lg bg-white text-left hover:border-[var(--green)] focus:outline-none focus:ring-2 focus:ring-[var(--green)] focus:border-transparent"
+            >
+              <span
+                className={selectedSize ? "text-gray-900" : "text-gray-500"}
               >
-                {size.label}
-              </button>
-            ))}
+                {selectedSize
+                  ? GANG_SHEET_SIZES.find((s) => s.value === selectedSize)
+                      ?.label
+                  : "Select a size"}
+              </span>
+              <svg
+                className={`w-5 h-5 text-gray-400 transition-transform ${
+                  isSizeDropdownOpen ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {isSizeDropdownOpen && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {GANG_SHEET_SIZES.map((size) => (
+                  <button
+                    key={size.value}
+                    type="button"
+                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
+                      selectedSize === size.value
+                        ? "bg-[var(--green)] text-white"
+                        : "text-gray-900"
+                    } ${selectedSize === size.value ? "font-semibold" : ""}`}
+                    onClick={() => {
+                      handleSizeSelect(size.value);
+                      setIsSizeDropdownOpen(false);
+                    }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span>{size.label}</span>
+                      <span className="text-sm opacity-75">
+                        ${size.price.toFixed(2)}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-2 mb-4">
             {OPTIONS.map((opt) => (
