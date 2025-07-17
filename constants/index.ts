@@ -4,7 +4,7 @@ export const navLinks = [
     href: "/",
   },
   {
-    name: "Designs",
+    name: "Orders DTFs",
     subLinks: [
       {
         name: "Gang Sheet Builder",
@@ -21,10 +21,10 @@ export const navLinks = [
       },
     ],
   },
-  {
-    name: "Pricing",
-    href: "/pricing",
-  },
+  // {
+  //   name: "Pricing",
+  //   href: "/pricing",
+  // },
   {
     name: "About Us",
     href: "/about-us",
@@ -38,8 +38,8 @@ export const navLinks = [
     href: "/orders",
   },
   {
-    name: "Apperal",
-    href: "/apperal",
+    name: "Apparel",
+    href: "/apparel",
   },
 ];
 

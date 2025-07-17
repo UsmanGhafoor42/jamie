@@ -7,7 +7,7 @@ import React, {
   useRef,
   useEffect,
 } from "react";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
 
 const UV_STICKER_SIZES = [
@@ -61,7 +61,7 @@ const Page = () => {
       setImagePreview(URL.createObjectURL(file));
     }
   };
-  const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
@@ -69,7 +69,7 @@ const Page = () => {
       setImagePreview(URL.createObjectURL(file));
     }
   };
-  const handleDragOver = (e: DragEvent<HTMLLabelElement>) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
 
@@ -114,35 +114,14 @@ const Page = () => {
     <main className="p-4 lg:p-12 layout">
       <div className="flex flex-col lg:flex-row gap-10">
         {/* Left: Image preview or placeholder */}
-        <div className="flex-1 flex flex-col items-center justify-start mb-8 lg:mb-0">
-          {/* <Image
+        <div className="flex-1 flex flex-col items-center justify-start mb-8 lg:mb-0 lg:sticky lg:top-8 lg:self-start">
+          <Image
             width={500}
             height={500}
             src="/images/uv-stcikers-sheet.webp"
             alt="UV Stickers"
             className="object-cover"
-          /> */}
-          <div className="w-full max-w-xl aspect-[1.1/1] bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden border border-gray-300">
-            {imagePreview ? (
-              <Image
-                width={100}
-                height={100}
-                src={imagePreview}
-                alt="Preview"
-                className="object-fit w-full h-full"
-              />
-            ) : (
-              // <span className="text-gray-400 text-lg">Image Preview</span>
-              <Image
-                width={500}
-                height={500}
-                src="/images/uv-stcikers-sheet.webp"
-                alt="UV Stickers"
-                className="object-cover"
-              />
-            )}
-          </div>
-          {/* Custom upload */}
+          />
         </div>
         {/* Right: Form */}
         <div className="flex-1 max-w-xl mx-auto">
@@ -201,30 +180,72 @@ const Page = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="fileInput"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              className="mt-6 border-2 border-dashed border-gray-400 bg-gray-50 text-gray-700 rounded-xl flex flex-col items-center justify-center px-8 py-8 cursor-pointer transition hover:bg-gray-100 text-center w-full max-w-md"
-            >
-              <UploadCloud className="w-10 h-10 mb-2" />
-              <span className="font-semibold mb-1">
-                Upload Your Design File
-              </span>
-              <span className="text-xs mb-2">Click or drag and drop file</span>
-              <input
-                id="fileInput"
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              {uploadedFile && (
-                <span className="mt-2 text-[var(--green)] text-sm">
-                  {uploadedFile.name}
-                </span>
-              )}
-            </label>
+            {imagePreview ? (
+              <div className="relative mt-6 rounded-xl bg-[var(--green)]">
+                <div className="bg-gradient-to-br from-[#4cce24] via-[#6ebd63] to-[#1c5814] rounded-xl flex flex-col items-center justify-center p-4">
+                  <div className="relative w-full flex justify-center">
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      width={400}
+                      height={350}
+                      className="max-h-48 rounded shadow-lg object-contain"
+                    />
+                    {/* Delete button */}
+                    <button
+                      className="absolute top-2 right-2 bg-black/60 hover:text-red-600 text-white text-xl rounded-full w-8 h-8 cursor-pointer p-1"
+                      onClick={() => {
+                        setUploadedFile(null);
+                        setImagePreview(null);
+                      }}
+                      aria-label="Delete"
+                    >
+                      <X />
+                    </button>
+                  </div>
+                  <div className="mt-4 w-full text-left">
+                    <div className="text-white font-medium truncate">
+                      {uploadedFile?.name}
+                    </div>
+                    <div className="text-white">
+                      {uploadedFile?.size !== undefined
+                        ? `${(uploadedFile.size / 1024).toFixed(2)} KB`
+                        : ""}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                className={`relative mt-6 rounded-xl border-2 border-dashed bg-[var(--green)]`}
+              >
+                <div
+                  className="flex flex-col items-center justify-center w-full h-56 bg-gradient-to-br from-[#4cce24] via-[#6ebd63] to-[#1c5814] rounded-xl cursor-pointer"
+                  onClick={() => document.getElementById("fileInput")?.click()}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                >
+                  <UploadCloud className="w-10 h-10 mb-2 text-white" />
+                  <span className="font-semibold mb-1 text-white text-lg">
+                    Upload artwork
+                  </span>
+                  <span className="text-xs mb-2 text-white">
+                    Drag & drop your artwork here or click and locate your file.
+                  </span>
+                  <input
+                    id="fileInput"
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+            )}
+            <div className="text-xs text-gray-400 mt-2 text-center">
+              Supports: JPG, JPEG, PNG, GIF, BMP, EPS, PDF, AI, SVG, PSD, TIF,
+              TIFF
+            </div>
           </div>
 
           <h2 className="text-lg font-semibold mt-6 mb-2">
