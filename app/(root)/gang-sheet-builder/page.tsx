@@ -89,7 +89,7 @@ const Page = () => {
     const found = OPTIONS.find((o) => o.value === opt);
     return sum + (found ? found.price : 0);
   }, 0);
-  const total = ((basePrice + optionsPrice) * quantity).toFixed(2);
+  const total = (basePrice * quantity + optionsPrice).toFixed(2);
 
   // Handle add to cart
   const handleAddToCart = () => {
