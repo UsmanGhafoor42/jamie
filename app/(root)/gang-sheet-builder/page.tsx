@@ -141,21 +141,21 @@ const Page = () => {
           </div> */}
           {/* Custom upload */}
           {/* <label
-            htmlFor="fileInput"
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
+          htmlFor="fileInput"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
             className="mt-6 border-2 border-dashed border-gray-400 bg-gray-50 text-gray-700 rounded-xl flex flex-col items-center justify-center px-8 py-8 cursor-pointer transition hover:bg-gray-100 text-center w-full max-w-md"
           >
             <UploadCloud className="w-10 h-10 mb-2" />
             <span className="font-semibold mb-1">Upload Your Design File</span>
             <span className="text-xs mb-2">Click or drag and drop file</span>
-            <input
-              id="fileInput"
-              type="file"
+          <input
+            id="fileInput"
+            type="file"
               accept="image/*,application/pdf"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            onChange={handleFileChange}
+            className="hidden"
+          />
             {uploadedFile && (
               <span className="mt-2 text-[var(--green)] text-sm">
                 {uploadedFile.name}

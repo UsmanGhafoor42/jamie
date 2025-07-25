@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
+import axios from "axios";
 
 const GANG_SHEET_SIZES = [
   { label: '2" x 2"', value: "2x2", price: 1.05 },
@@ -112,19 +113,30 @@ const Page = () => {
   ).toFixed(2);
 
   // Handle add to cart
-  const handleAddToCart = () => {
-    const data = {
-      image: uploadedFile,
-      imagePreview,
-      size: selectedSize,
-      options: selectedOptions,
-      orderNotes,
-      quantity,
-      total,
-    };
-    // In real app, send to backend/cart
-    console.log("Cart Data:", data);
-    alert("Order added to cart! Check console for data.");
+  const handleAddToCart = async () => {
+    if (!uploadedFile || !selectedSize) return;
+
+    const formData = new FormData();
+    formData.append("title", "Garam Anday");
+    formData.append("image", uploadedFile);
+    formData.append("size", selectedSize);
+    formData.append("quantity", quantity.toString());
+    formData.append("total", total);
+    formData.append("options", JSON.stringify(selectedOptions));
+    formData.append("orderNotes", orderNotes);
+
+    try {
+      await axios.post(
+        "http://localhost:5000/api/cart/add", // or your actual backend endpoint
+        formData,
+        {
+          withCredentials: true, // send cookies (JWT) automatically
+        }
+      );
+      alert("Order added to cart!");
+    } catch {
+      alert("Failed to add to cart. Please login or try again.");
+    }
   };
 
   return (

@@ -1,14 +1,31 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks/useAuth";
+
+// Set NEXT_PUBLIC_API_URL in your .env file, e.g.
+// NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
 const Page = () => {
+  const { user, loading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/");
+    }
+  }, [user, loading, router]);
+
   const [form, setForm] = useState({
-    fullname: "",
     email: "",
     password: "",
   });
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
@@ -17,11 +34,38 @@ const Page = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log(form);
+    setLoadingSubmit(true);
+    setError(null);
+    if (!API_URL) {
+      setError(
+        "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
+      );
+      setLoadingSubmit(false);
+      return;
+    }
+    try {
+      await axios.post(`${API_URL}/auth/login`, form, {
+        withCredentials: true,
+      });
+      window.location.reload(); // reload to update user state and trigger middleware
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Login failed. Please try again."
+      );
+    } finally {
+      setLoadingSubmit(false);
+    }
   };
+
+  if (loading || user) return null;
 
   return (
     <section className="flex justify-center items-center min-h-screen bg-gray-50 font-poppins">
@@ -37,7 +81,12 @@ const Page = () => {
             height={69}
           />
         </Link>
-        <h2 className="text-2xl font-bold my-6 text-center">Login</h2>
+        <h2 className="text-2xl font-bold my-6 text-center uppercase">Login</h2>
+        {error && (
+          <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
+            {error}
+          </div>
+        )}
         <div className="mb-4">
           <label htmlFor="email" className="block text-gray-700 mb-2">
             Email
@@ -66,11 +115,18 @@ const Page = () => {
             required
           />
         </div>
+        <Link
+          className="font-bold text-[var(--green))] uppercase"
+          href={"/auth/forgot-password"}
+        >
+          Forgot Password?
+        </Link>
         <button
           type="submit"
-          className="w-full bg-[var(--green)] text-white py-2 rounded font-poppins transition-colors"
+          className="w-full bg-[var(--green)] text-white py-2 rounded font-poppins transition-colors disabled:opacity-60"
+          disabled={loadingSubmit}
         >
-          Login
+          {loadingSubmit ? "Logging in..." : "Login"}
         </button>
         <h4 className="text-sm font-poppins text-right mt-4">
           Don&apos;t have an account{" "}

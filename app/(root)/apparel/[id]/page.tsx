@@ -3,32 +3,8 @@
 import React, { useState } from "react";
 import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
-
-// Shirt sizes and prices
-const SHIRT_SIZES = [
-  { label: "S", value: "S", price: 3.75 },
-  { label: "M", value: "M", price: 3.75 },
-  { label: "L", value: "L", price: 3.75 },
-  { label: "XL", value: "XL", price: 3.75 },
-  { label: "XXL", value: "XXL", price: 5.75 },
-  { label: "3XL", value: "3XL", price: 7.75 },
-];
-
-// Shirt color swatches
-const SHIRT_COLORS = [
-  { name: "White", value: "#fff" },
-  { name: "Black", value: "#222" },
-  { name: "Gray", value: "#888" },
-  { name: "Red", value: "#e53e3e" },
-  { name: "Blue", value: "#3182ce" },
-  { name: "Green", value: "#38a169" },
-  { name: "Yellow", value: "#ecc94b" },
-  { name: "Pink", value: "#ed64a6" },
-  { name: "Navy", value: "#2a4365" },
-  { name: "Brown", value: "#8B5E3C" },
-  { name: "Olive", value: "#6B8E23" },
-  { name: "Purple", value: "#805ad5" },
-];
+import products from "../apparelProducts.json";
+import { useParams } from "next/navigation";
 
 // Sticker locations and prices
 const STICKER_LOCATIONS = [
@@ -53,36 +29,68 @@ const EXTRA_OPTIONS = [
   { label: "Rush fee", value: "rush", price: 25 },
 ];
 
-type SizeKey = (typeof SHIRT_SIZES)[number]["value"];
 type StickerKey = (typeof STICKER_LOCATIONS)[number]["value"];
 type OptionKey = (typeof EXTRA_OPTIONS)[number]["value"];
 
 const Page = () => {
-  // Shirt size quantities
-  const [sizeQuantities, setSizeQuantities] = useState<Record<SizeKey, number>>(
-    SHIRT_SIZES.reduce(
-      (acc, s) => ({ ...acc, [s.value]: 0 }),
-      {} as Record<SizeKey, number>
-    )
+  const { id } = useParams();
+  // All useState/useEffect hooks here (move before any early return)
+  // We'll use empty arrays/objects as fallback for initial state
+  const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>(
+    {}
   );
-  // Selected color
-  const [selectedColor, setSelectedColor] = useState<string>(
-    SHIRT_COLORS[0].value
-  );
-  // Sticker uploads per location
-  const [stickers, setStickers] = useState<Record<StickerKey, File | null>>(
-    STICKER_LOCATIONS.reduce(
-      (acc, loc) => ({ ...acc, [loc.value]: null }),
-      {} as Record<StickerKey, File | null>
-    )
-  );
-  // Extra options
-  const [selectedOptions, setSelectedOptions] = useState<OptionKey[]>([]);
-  // Order notes
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [stickers, setStickers] = useState<Record<string, File | null>>({});
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [orderNotes, setOrderNotes] = useState<string>("");
 
+  // Always call hooks before any early return
+  React.useEffect(() => {
+    if (!products.find((p) => p.id === Number(id))) return;
+    setSizeQuantities(
+      (products.find((p) => p.id === Number(id))?.prices || []).reduce(
+        (acc, s) => ({ ...acc, [s.size]: 0 }),
+        {}
+      )
+    );
+    setSelectedColor(
+      products.find((p) => p.id === Number(id))?.colorSwatches?.[0]?.hex || ""
+    );
+    setStickers(
+      STICKER_LOCATIONS.reduce(
+        (acc, loc) => ({ ...acc, [loc.value]: null }),
+        {}
+      )
+    );
+  }, [id]);
+
+  const product = products.find((p) => p.id === Number(id));
+  if (!product) return <div>Product not found</div>;
+
+  // Use product.prices for sizes
+  const SHIRT_SIZES =
+    product.prices?.map((p) => ({
+      label: p.size,
+      value: p.size,
+      price: p.price,
+    })) || [];
+
+  // Use product.colorSwatches for color selection
+  const colorSwatches =
+    product.colorSwatches?.map((c) => ({
+      name: c.name,
+      value: c.hex,
+      image: c.image,
+    })) || [];
+
+  // Use product.finishingMeasurementTable for measurement table
+  const measurementTable =
+    product.finishingMeasurementTable ||
+    product.finishingMeasurementTable ||
+    [];
+
   // Handle size quantity change
-  const handleSizeQtyChange = (size: SizeKey, qty: number) => {
+  const handleSizeQtyChange = (size: string, qty: number) => {
     setSizeQuantities((prev) => ({ ...prev, [size]: qty }));
   };
 
@@ -103,7 +111,7 @@ const Page = () => {
 
   // Calculate totals
   const productTotal = SHIRT_SIZES.reduce(
-    (sum, s) => sum + sizeQuantities[s.value] * s.price,
+    (sum, s) => sum + (sizeQuantities[s.value] || 0) * s.price,
     0
   );
   const totalShirtQty = Object.values(sizeQuantities).reduce(
@@ -145,6 +153,10 @@ const Page = () => {
   };
 
   // --- UI ---
+  // Find the selected color swatch for image
+  const selectedColorObj = colorSwatches.find((c) => c.value === selectedColor);
+  const shirtImageSrc = selectedColorObj?.image || product.productImage;
+
   return (
     <main className="p-4 lg:p-12 layout">
       <div className="flex flex-col lg:flex-row gap-10">
@@ -153,65 +165,75 @@ const Page = () => {
           <Image
             width={500}
             height={500}
-            src="/images/product-image.png"
-            alt="HD Cotton DTF Printed Shirt"
+            src={shirtImageSrc}
+            alt={product.title}
             className="object-cover rounded-xl border border-gray-200"
+          />
+          <Image
+            src="/images/Print_Locations_Short_Sleeve.jpg"
+            alt="Print location on short sleeves"
+            width={500}
+            height={500}
+            className="object-cover"
           />
         </div>
         {/* Right: Product info and options */}
         <div className="flex-1 max-w-xl mx-auto w-full">
           <h1 className="text-2xl md:text-4xl font-bold mb-2">
-            HD Cotton DTF Printed Shirt 4
+            {product.title}
           </h1>
-          <p className="text-gray-700 mb-2">
-            At HMD Ink, we specialize in high-quality custom T-shirt printing
-            that brings your ideas to life. Whether it’s for personal style,
-            team spirit, or brand promotion, our vibrant prints and premium
-            materials ensure every shirt stands out. With easy online ordering
-            and fast delivery, we make it simple to create T-shirts that speak
-            your message loud and clear.
-          </p>
+          <p className="text-gray-700 mb-2">{product.description}</p>
           <h2 className="text-xl font-bold mb-2">Additional Information</h2>
           <ul className="list-disc list-inside text-gray-700 mb-4 text-sm">
-            <li>
-              4.45 oz./yd² (US), 7.4 oz./L yd (CA), 100% U.S. cotton, 30 singles
-            </li>
-            <li>Ash Grey is 99/1 cotton/polyester</li>
-            <li>Sport Grey is 90/10 cotton/black polyester</li>
-            <li>
-              Dark Heather, Graphite Heather & Heather colors are 50/50
-              cotton/polyester
-            </li>
-            <li>
-              Features Innovation you can feel. Made with 100% U.S. cotton and
-              the latest breakthrough in soft cotton technology, the Gildan®
-            </li>
-            <li>
-              Light Cotton family has been remastered for improved printability,
-              quality and comfort you can see and feel.
-            </li>
-            <li>Modern classic fit</li>
-            <li>Narrow width, rib collar</li>
-            <li>Taped neck and shoulders</li>
-            <li>High-performing recycled tearaway label</li>
-            <li>
-              Made With Respect Gildan partners with Better Cotton to improve
-              cotton farming globally
-            </li>
-            <li>Made with OEKO-TEX certified low-impact dyes</li>
-            <li>
-              We reduce plastic waste by the removal of polybags from all
-              products except color White
-            </li>
+            {product.details?.map((d, i) => (
+              <li key={i}>{d}</li>
+            ))}
           </ul>
+
+          {/* Finishing Measurement Table */}
+          <h2 className="text-xl font-bold mb-2">Finishing Measurement</h2>
+          <div className="overflow-x-auto mb-6">
+            <table className="min-w-full border border-gray-300 text-sm text-center">
+              <thead className="bg-gray-100">
+                <tr>
+                  {measurementTable[0]?.map((col, i) => (
+                    <th key={i} className="px-2 py-2 border">
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {measurementTable.slice(1).map((row, i) => (
+                  <tr key={i}>
+                    {row.map((cell, j) => (
+                      <td
+                        key={j}
+                        className={
+                          j === 0
+                            ? "px-2 py-2 border font-semibold text-left"
+                            : "px-2 py-2 border" +
+                              (typeof cell === "string" && cell.includes("+/-")
+                                ? " text-[11px]"
+                                : "")
+                        }
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* Shirt color selection */}
           <div className="mb-4">
             <label className="block font-medium mb-1">Color:</label>
             <div className="flex flex-wrap gap-2">
-              {SHIRT_COLORS.map((color) => (
+              {colorSwatches.map((color, i) => (
                 <button
-                  key={color.value}
+                  key={`${color.value}-${i}`}
                   type="button"
                   className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
                     selectedColor === color.value
@@ -221,7 +243,10 @@ const Page = () => {
                   style={{ background: color.value }}
                   onClick={() => handleColorSelect(color.value)}
                   aria-label={color.name}
-                />
+                  title={color.name}
+                >
+                  {/* Optionally show image preview on hover or inside swatch */}
+                </button>
               ))}
             </div>
           </div>
@@ -241,8 +266,8 @@ const Page = () => {
                   <input
                     type="number"
                     min={0}
-                    max={99}
-                    value={sizeQuantities[size.value]}
+                    required
+                    value={sizeQuantities[size.value] ?? 0}
                     onChange={(e) =>
                       handleSizeQtyChange(size.value, Number(e.target.value))
                     }
@@ -281,6 +306,7 @@ const Page = () => {
                       <input
                         id={`sticker-upload-${loc.value}`}
                         type="file"
+                        required
                         accept="image/*,application/pdf"
                         onChange={(e) =>
                           handleStickerChange(

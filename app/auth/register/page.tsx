@@ -2,13 +2,27 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+
+// Set NEXT_PUBLIC_API_URL in your .env file, e.g.
+// NEXT_PUBLIC_API_URL=http://localhost:5000/api
+
+type AxiosErrorLike = {
+  response?: { data?: { message?: string } };
+  message?: string;
+};
 
 const Page = () => {
   const [form, setForm] = useState({
-    fullname: "",
+    name: "",
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
@@ -17,10 +31,32 @@ const Page = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log(form);
+    setLoading(true);
+    setError(null);
+    if (!API_URL) {
+      setError(
+        "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
+      );
+      setLoading(false);
+      return;
+    }
+    try {
+      await axios.post(`${API_URL}/auth/register`, form, {
+        withCredentials: true, // send cookies if backend uses them
+      });
+      router.push("/auth/login");
+    } catch (error: unknown) {
+      const err = error as AxiosErrorLike;
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Register failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,7 +73,14 @@ const Page = () => {
             height={69}
           />
         </Link>
-        <h2 className="text-2xl font-bold my-6 text-center">Register</h2>
+        <h2 className="text-2xl font-bold my-6 text-center uppercase">
+          Register
+        </h2>
+        {error && (
+          <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
+            {error}
+          </div>
+        )}
         <div className="mb-4">
           <label htmlFor="fullname" className="block text-gray-700 mb-2">
             Full Name
@@ -45,8 +88,8 @@ const Page = () => {
           <input
             type="text"
             id="fullname"
-            name="fullname"
-            value={form.fullname}
+            name="name"
+            value={form.name}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
             required
@@ -82,9 +125,10 @@ const Page = () => {
         </div>
         <button
           type="submit"
-          className="w-full bg-[var(--green)] text-white py-2 rounded font-poppins transition-colors"
+          className="w-full bg-[var(--green)] text-white py-2 rounded font-poppins transition-colors disabled:opacity-60"
+          disabled={loading}
         >
-          Login
+          {loading ? "Register ..." : "Register"}
         </button>
         <h4 className="text-sm font-poppins text-right mt-4">
           Already have an account{" "}

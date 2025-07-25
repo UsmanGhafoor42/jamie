@@ -12,18 +12,30 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks/useAuth";
+import axios from "axios";
 
 const Header = () => {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const { user, loading } = useUser();
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState<string | null>(
     null
   );
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
   const router = useRouter();
 
   const handleClick = () => {
     router.push("/auth/login");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${API_URL}/auth/logout`, {}, { withCredentials: true });
+      window.location.reload(); // ✅ this ensures UI updates instantly
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   // Close dropdown on outside click
@@ -39,6 +51,8 @@ const Header = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  if (loading) return null;
 
   return (
     <header>
@@ -116,7 +130,11 @@ const Header = () => {
                 <Link href={"/cart"}>
                   <ShoppingCart className="w-6 h-6" />
                 </Link>
-                <CustomButton title="Login" onClick={handleClick} />
+                {user ? (
+                  <CustomButton title="Logout" onClick={handleLogout} />
+                ) : (
+                  <CustomButton title="Login" onClick={handleClick} />
+                )}
               </div>
             </div>
             <hr className="border-black border-2" />
@@ -191,11 +209,19 @@ const Header = () => {
                       </Link>
                     )
                   )}
-                  <CustomButton
-                    title="Login"
-                    onClick={() => {}}
-                    className="w-full"
-                  />
+                  {user ? (
+                    <CustomButton
+                      title="Logout"
+                      onClick={handleLogout}
+                      className="w-full"
+                    />
+                  ) : (
+                    <CustomButton
+                      title="Login"
+                      onClick={handleClick}
+                      className="w-full"
+                    />
+                  )}
                 </nav>
               </SheetContent>
             </Sheet>

@@ -1,134 +1,106 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import DtfButton from "@/components/custom/DtfButton";
 import CustomButton from "@/components/custom/CustomButton";
 import { useRouter } from "next/navigation";
+import products from "./apparelProducts.json";
 // Dummy Product Type
 interface Product {
   id: number;
   title: string;
-  price: string;
-  msrp: string;
-  image: string;
-  colors: string[];
-  size: string[];
+  productImage: string;
+  slidersImage?: Record<string, string>;
 }
 
-// Dummy Products
-const products: Product[] = [
-  {
-    id: 1,
-    title: "HD Cotton DTF Printed Shirt",
-    price: "$12.95",
-    msrp: "$18.95",
-    image: "/images/product-image.png",
-    colors: ["#008000", "#FF0000", "#FFA500", "#0000FF"],
-    size: ["S", "M", "L", "XL", "XXL"],
-  },
-  {
-    id: 2,
-    title: "HD Cotton DTF Printed Shirt",
-    price: "$12.95",
-    msrp: "$18.95",
-    image: "/images/product-image.png",
-    colors: ["#008000", "#FF0000", "#FFA500", "#0000FF"],
-    size: ["S", "M", "L", "XL", "XXL"],
-  },
-  {
-    id: 3,
-    title: "HD Cotton DTF Printed Shirt",
-    price: "$12.95",
-    msrp: "$18.95",
-    image: "/images/product-image.png",
-    colors: ["#008000", "#FF0000", "#FFA500", "#0000FF"],
-    size: ["S", "M", "L", "XL", "XXL"],
-  },
-  {
-    id: 4,
-    title: "HD Cotton DTF Printed Shirt",
-    price: "$12.95",
-    msrp: "$18.95",
-    image: "/images/product-image.png",
-    colors: ["#008000", "#FF0000", "#FFA500", "#0000FF"],
-    size: ["S", "M", "L", "XL", "XXL"],
-  },
-  {
-    id: 5,
-    title: "HD Cotton DTF Printed Shirt",
-    price: "$12.95",
-    msrp: "$18.95",
-    image: "/images/product-image.png",
-    colors: ["#008000", "#FF0000", "#FFA500", "#0000FF"],
-    size: ["S", "M", "L", "XL", "XXL"],
-  },
-  {
-    id: 6,
-    title: "HD Cotton DTF Printed Shirt",
-    price: "$12.95",
-    msrp: "$18.95",
-    image: "/images/product-image.png",
-    colors: ["#008000", "#FF0000", "#FFA500", "#0000FF"],
-    size: ["S", "M", "L", "XL", "XXL"],
-  },
-];
-
-const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
+const ProductCard: React.FC<
+  { product: Product } & { slidersImage?: Record<string, string> }
+> = ({ product, slidersImage }) => {
   const router = useRouter();
+  // Show slider if slidersImage exists and has images
+  const isSlider = slidersImage && Object.keys(slidersImage).length > 0;
+  const [sliderIndex, setSliderIndex] = useState(0);
+  const sliderImages = isSlider ? Object.values(slidersImage) : [];
+
+  // Auto-slide every 0.3s for id 7
+  useEffect(() => {
+    if (!isSlider) return;
+    const interval = setInterval(() => {
+      setSliderIndex((prev) => (prev + 1) % sliderImages.length);
+    }, 300);
+    return () => clearInterval(interval);
+  }, [isSlider, sliderImages.length]);
+
   const handleClick = () => {
     router.push(`/apparel/${product.id}`);
   };
+
+  // const handlePrev = (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   setSliderIndex(
+  //     (prev) => (prev - 1 + sliderImages.length) % sliderImages.length
+  //   );
+  // };
+  // const handleNext = (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   setSliderIndex((prev) => (prev + 1) % sliderImages.length);
+  // };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-3">
-      <div
-      // href={`/apperal/${product.id}`}
-      // href={"/"}
-      >
-        <Image
-          src={product.image}
-          alt={product.title}
-          width={150}
-          height={150}
-          className="object-cover w-full"
-        />
-        <div className="flex flex-col gap-2">
-          <h3 className="font-semibold mt-2">{product.title}</h3>
-          {/* <div className="text-sm font-semibold text-gray-500">
-          <span className="font-bold">Size:</span>
-          {product.size.map((size, index) => (
-            <span key={index} className="p-1 rounded bg-gray-300 ml-1">
-              {size}
-            </span>
-          ))}
-        </div> */}
-          {/* <div className="text-sm font-semibold text-gray-500">Color:</div>
-        <div className="flex space-x-1 mt-1">
-          {product.colors.map((color, index) => (
-            <span
-              key={index}
-              className="w-4 h-4 rounded-full"
-              style={{ backgroundColor: color }}
-            ></span>
-          ))}
-        </div>
-        <div className="mt-1 text-sm">
-          <span className="font-bold">MSRP:</span> {product.msrp}
-        </div>
-        <div className="text-[var(--green)] font-bold text-sm">
-          {product.price}
-        </div> */}
-          <CustomButton
-            onClick={handleClick}
-            title="Select Options"
-            className="w-fit"
+      <div className="flex flex-col gap-5">
+        {isSlider ? (
+          <div className="relative flex flex-col items-center">
+            <Image
+              src={sliderImages[sliderIndex]}
+              alt={product.title}
+              width={150}
+              height={150}
+              className="object-cover w-full"
+            />
+            {/* <button
+              className="absolute left-0 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 rounded-full px-2 py-1 shadow hover:bg-gray-200"
+              onClick={handlePrev}
+              style={{ zIndex: 2 }}
+              aria-label="Previous image"
+            >
+              &#8592;
+            </button>
+            <button
+              className="absolute right-0 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 rounded-full px-2 py-1 shadow hover:bg-gray-200"
+              onClick={handleNext}
+              style={{ zIndex: 2 }}
+              aria-label="Next image"
+            >
+              &#8594;
+            </button> */}
+            {/* <div className="text-xs text-gray-500 mt-1">
+              {sliderIndex + 1} / {sliderImages.length}
+            </div> */}
+          </div>
+        ) : (
+          <Image
+            src={product.productImage}
+            alt={product.title}
+            width={150}
+            height={150}
+            className="object-cover w-full"
           />
-        </div>
+        )}
+
+        <h3 className="font-semibold text-center">{product.title}</h3>
+        <CustomButton
+          onClick={handleClick}
+          title="Select Options"
+          className="w-fit"
+        />
       </div>
     </div>
   );
 };
 
 const Page: React.FC = () => {
+  // Map slidersImage for id 7
   return (
     <main className="p-4 lg:p-12 layout">
       {/* Top section: buttons left, order card right */}
@@ -145,10 +117,15 @@ const Page: React.FC = () => {
             everyday which guarantees personal investment into YOUR needs as a
             customer. We truly value your business & can’t wait to serve you!
           </p>
+
           {/* Product grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-10 gap-x-6">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                slidersImage={product.slidersImage}
+              />
             ))}
           </div>
         </div>
