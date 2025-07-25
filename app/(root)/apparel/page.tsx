@@ -10,7 +10,7 @@ interface Product {
   id: number;
   title: string;
   productImage: string;
-  slidersImage?: Record<string, string>;
+  slidersImage?: Record<string, string | undefined>;
 }
 
 const ProductCard: React.FC<
@@ -124,7 +124,15 @@ const Page: React.FC = () => {
               <ProductCard
                 key={product.id}
                 product={product}
-                slidersImage={product.slidersImage}
+                slidersImage={
+                  product.slidersImage
+                    ? (Object.fromEntries(
+                        Object.entries(product.slidersImage).filter(
+                          ([, v]) => typeof v === "string" && v
+                        )
+                      ) as Record<string, string>)
+                    : undefined
+                }
               />
             ))}
           </div>

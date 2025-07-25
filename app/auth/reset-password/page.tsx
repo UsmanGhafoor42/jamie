@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 // If you haven't installed axios, run: npm install axios
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
@@ -15,7 +15,16 @@ type AxiosErrorLike = {
   response?: { data?: { message?: string } };
 };
 
-const Page = () => {
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}
+
+// Move your actual page logic into a separate component:
+function ResetPasswordContent() {
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +148,4 @@ const Page = () => {
       </div>
     </section>
   );
-};
-
-export default Page;
+}
