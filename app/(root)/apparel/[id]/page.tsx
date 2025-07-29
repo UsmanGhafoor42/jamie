@@ -40,7 +40,7 @@ const Page = () => {
     {}
   );
   const [selectedColor, setSelectedColor] = useState<string>("");
-  const [stickers, setStickers] = useState<Record<string, File | null>>({});
+  const [imprint, setimprint] = useState<Record<string, File | null>>({});
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [orderNotes, setOrderNotes] = useState<string>("");
 
@@ -56,7 +56,7 @@ const Page = () => {
     setSelectedColor(
       products.find((p) => p.id === Number(id))?.colorSwatches?.[0]?.hex || ""
     );
-    setStickers(
+    setimprint(
       STICKER_LOCATIONS.reduce(
         (acc, loc) => ({ ...acc, [loc.value]: null }),
         {}
@@ -99,7 +99,7 @@ const Page = () => {
 
   // Handle sticker file upload
   const handleStickerChange = (loc: StickerKey, file: File | null) => {
-    setStickers((prev) => ({ ...prev, [loc]: file }));
+    setimprint((prev) => ({ ...prev, [loc]: file }));
   };
 
   // Handle extra options
@@ -118,9 +118,9 @@ const Page = () => {
     (sum, qty) => sum + qty,
     0
   );
-  const stickersTotal = STICKER_LOCATIONS.reduce(
+  const imprintTotal = STICKER_LOCATIONS.reduce(
     (sum, loc) =>
-      stickers[loc.value] && totalShirtQty > 0
+      imprint[loc.value] && totalShirtQty > 0
         ? sum + loc.price * totalShirtQty
         : sum,
     0
@@ -129,21 +129,19 @@ const Page = () => {
     (sum, opt) => (selectedOptions.includes(opt.value) ? sum + opt.price : sum),
     0
   );
-  const grandTotal = (productTotal + stickersTotal + optionsTotal).toFixed(2);
+  const grandTotal = (productTotal + imprintTotal + optionsTotal).toFixed(2);
 
   // Add to cart handler
   const handleAddToCart = () => {
     const data = {
       sizes: sizeQuantities,
       color: selectedColor,
-      stickers: Object.fromEntries(
-        Object.entries(stickers).filter(([, v]) => v)
-      ),
+      imprint: Object.fromEntries(Object.entries(imprint).filter(([, v]) => v)),
       options: selectedOptions,
       orderNotes,
       totals: {
         productTotal,
-        stickersTotal,
+        imprintTotal,
         optionsTotal,
         grandTotal,
       },
@@ -281,30 +279,30 @@ const Page = () => {
           {/* Sticker upload per location */}
           <div className="mb-4">
             <label className="block font-medium mb-1">
-              Custom Sticker Locations:
+              Custom Imprint Locations:
             </label>
             <div className="flex flex-col gap-2">
               {STICKER_LOCATIONS.map((loc) => (
                 <div key={loc.value} className="flex items-center gap-2">
                   <span className="w-40 text-sm">{loc.label}</span>
                   <span className="text-xs text-gray-500">
-                    Sticker Fee (${loc.price.toFixed(2)})
+                    Imprint Fee (${loc.price.toFixed(2)})
                   </span>
                   <div className="flex-1 flex items-center gap-2">
                     <label
-                      htmlFor={`sticker-upload-${loc.value}`}
+                      htmlFor={`imprint-upload-${loc.value}`}
                       className={`border-2 border-dashed rounded-lg flex items-center gap-2 px-3 py-2 cursor-pointer transition hover:bg-gray-50 ${
-                        stickers[loc.value]
+                        imprint[loc.value]
                           ? "border-[var(--green)] bg-green-50"
                           : "border-gray-300 bg-white"
                       }`}
                     >
                       <UploadCloud className="w-5 h-5 text-[var(--green)]" />
                       <span className="text-xs font-medium">
-                        {stickers[loc.value] ? "Change file" : "Upload file"}
+                        {imprint[loc.value] ? "Change file" : "Upload file"}
                       </span>
                       <input
-                        id={`sticker-upload-${loc.value}`}
+                        id={`imprint-upload-${loc.value}`}
                         type="file"
                         required
                         accept="image/*,application/pdf"
@@ -316,12 +314,12 @@ const Page = () => {
                         }
                         className="hidden"
                       />
-                      {stickers[loc.value] && (
+                      {imprint[loc.value] && (
                         <span className="ml-2 text-[var(--green)] text-xs">
-                          {stickers[loc.value]?.name}
+                          {imprint[loc.value]?.name}
                         </span>
                       )}
-                      {stickers[loc.value] && (
+                      {imprint[loc.value] && (
                         <button
                           type="button"
                           className="ml-2 text-gray-400 hover:text-red-500"
@@ -336,7 +334,7 @@ const Page = () => {
                       )}
                     </label>
                     {/* Subtotal for this sticker location */}
-                    {stickers[loc.value] && totalShirtQty > 0 && (
+                    {imprint[loc.value] && totalShirtQty > 0 && (
                       <span className="text-xs text-gray-700">
                         = ${(loc.price * totalShirtQty).toFixed(2)}
                       </span>
@@ -389,8 +387,8 @@ const Page = () => {
               <span>${productTotal.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="font-semibold">Sticker total:</span>
-              <span>${stickersTotal.toFixed(2)}</span>
+              <span className="font-semibold">Imprint total:</span>
+              <span>${imprintTotal.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-semibold">Options total:</span>

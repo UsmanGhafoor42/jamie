@@ -5,7 +5,7 @@ interface AnotherHeroSectionProps {
 
 const AnotherHeroSection = ({ title }: AnotherHeroSectionProps) => {
   return (
-    <div className="bg-black py-50">
+    <div className="bg-black py-20">
       <div className="layout">
         <h2 className="text-2xl text-white md:text-5xl font-poppins uppercase font-bold text-center mb-4">
           {title}

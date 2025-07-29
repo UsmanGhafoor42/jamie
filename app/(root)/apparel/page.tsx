@@ -10,19 +10,35 @@ interface Product {
   id: number;
   title: string;
   productImage: string;
-  slidersImage?: Record<string, string | undefined>;
+  colorSwatches: { image: string; name: string; hex: string }[];
+  finishingMeasurementTable: (string | number)[][];
+  details: string[];
+  slidersImage: {
+    sliderImage1: string;
+    sliderImage2: string;
+    sliderImage3: string;
+    sliderImage4: string;
+    sliderImage5: string;
+  };
+  description: string;
+  prices: {
+    [key: string]: {
+      price: number;
+      description: string;
+    };
+  };
 }
 
-const ProductCard: React.FC<
-  { product: Product } & { slidersImage?: Record<string, string> }
-> = ({ product, slidersImage }) => {
+const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const router = useRouter();
-  // Show slider if slidersImage exists and has images
-  const isSlider = slidersImage && Object.keys(slidersImage).length > 0;
-  const [sliderIndex, setSliderIndex] = useState(0);
-  const sliderImages = isSlider ? Object.values(slidersImage) : [];
+  // Use colorSwatches images for slider if present
+  const colorSwatchImages =
+    product.colorSwatches?.map((c) => c.image).filter(Boolean) || [];
+  const isSlider = colorSwatchImages.length > 0;
+  const [, setSliderIndex] = useState(0);
+  const sliderImages = isSlider ? colorSwatchImages : [];
 
-  // Auto-slide every 0.3s for id 7
+  // Auto-slide every 0.3s for slider
   useEffect(() => {
     if (!isSlider) return;
     const interval = setInterval(() => {
@@ -35,58 +51,28 @@ const ProductCard: React.FC<
     router.push(`/apparel/${product.id}`);
   };
 
-  // const handlePrev = (e: React.MouseEvent) => {
-  //   e.stopPropagation();
-  //   setSliderIndex(
-  //     (prev) => (prev - 1 + sliderImages.length) % sliderImages.length
-  //   );
-  // };
-  // const handleNext = (e: React.MouseEvent) => {
-  //   e.stopPropagation();
-  //   setSliderIndex((prev) => (prev + 1) % sliderImages.length);
-  // };
-
   return (
     <div className="bg-white rounded-lg shadow-md p-3">
       <div className="flex flex-col gap-5">
-        {isSlider ? (
-          <div className="relative flex flex-col items-center">
-            <Image
+        {/* {isSlider ? ( */}
+        <div className="relative flex flex-col items-center">
+          {/* <Image
               src={sliderImages[sliderIndex]}
               alt={product.title}
               width={150}
               height={150}
               className="object-cover w-full"
-            />
-            {/* <button
-              className="absolute left-0 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 rounded-full px-2 py-1 shadow hover:bg-gray-200"
-              onClick={handlePrev}
-              style={{ zIndex: 2 }}
-              aria-label="Previous image"
-            >
-              &#8592;
-            </button>
-            <button
-              className="absolute right-0 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 rounded-full px-2 py-1 shadow hover:bg-gray-200"
-              onClick={handleNext}
-              style={{ zIndex: 2 }}
-              aria-label="Next image"
-            >
-              &#8594;
-            </button> */}
-            {/* <div className="text-xs text-gray-500 mt-1">
-              {sliderIndex + 1} / {sliderImages.length}
-            </div> */}
-          </div>
-        ) : (
-          <Image
-            src={product.productImage}
-            alt={product.title}
-            width={150}
-            height={150}
-            className="object-cover w-full"
-          />
-        )}
+            /> */}
+        </div>
+        {/* ) : ( */}
+        <Image
+          src={product.productImage}
+          alt={product.title}
+          width={150}
+          height={150}
+          className="object-cover w-full"
+        />
+        {/* )} */}
 
         <h3 className="font-semibold text-center">{product.title}</h3>
         <CustomButton
@@ -100,7 +86,6 @@ const ProductCard: React.FC<
 };
 
 const Page: React.FC = () => {
-  // Map slidersImage for id 7
   return (
     <main className="p-4 lg:p-12 layout">
       {/* Top section: buttons left, order card right */}
@@ -123,16 +108,7 @@ const Page: React.FC = () => {
             {products.map((product) => (
               <ProductCard
                 key={product.id}
-                product={product}
-                slidersImage={
-                  product.slidersImage
-                    ? (Object.fromEntries(
-                        Object.entries(product.slidersImage).filter(
-                          ([, v]) => typeof v === "string" && v
-                        )
-                      ) as Record<string, string>)
-                    : undefined
-                }
+                product={product as unknown as Product}
               />
             ))}
           </div>
