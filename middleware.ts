@@ -16,6 +16,7 @@ const AUTH_REQUIRED_PATHS = [
   "/orders",
   // add more protected routes as needed
 ];
+const ADMIN_ONLY_PATHS = ["/dashboard"];
 
 // Helper to check if path matches any in a list
 function matchesPath(path: string, patterns: string[]) {
@@ -38,7 +39,10 @@ async function verifyJWT(token: string | undefined) {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("token")?.value;
-  const isLoggedIn = !!(await verifyJWT(token));
+  const payload = await verifyJWT(token);
+  const isLoggedIn = !!payload;
+  const role = payload?.role;
+  console.log(isLoggedIn, role);
 
   // 1. Redirect logged-in users away from guest-only pages
   if (isLoggedIn && matchesPath(pathname, GUEST_ONLY_PATHS)) {
@@ -48,6 +52,11 @@ export async function middleware(req: NextRequest) {
   // 2. Require login for protected pages
   if (!isLoggedIn && matchesPath(pathname, AUTH_REQUIRED_PATHS)) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
+  }
+  if (matchesPath(pathname, ADMIN_ONLY_PATHS)) {
+    if (!isLoggedIn || role !== "admin") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
   }
 
   // 3. Allow all other requests

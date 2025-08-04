@@ -5,6 +5,7 @@ import axios from "axios";
 export type User = {
   name: string;
   email: string;
+  role: string;
   // add other fields as needed
 };
 
@@ -22,7 +23,10 @@ export function useUser() {
         .get<MeResponse>(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
           withCredentials: true,
         })
-        .then((res) => setUser(res.data.user))
+        .then((res) => {
+          setUser(res.data.user);
+          console.log(res.data.user);
+        })
         .catch(() => setUser(null))
     ).finally(() => setLoading(false));
   }, []);

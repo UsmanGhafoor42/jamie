@@ -137,6 +137,8 @@ const AddProductModal: React.FC<{
     try {
       if (!API_URL) throw new Error("API URL not set");
       const formData = new FormData();
+      const productId = crypto.randomUUID(); // <-- generate ID first
+      formData.append("id", productId); // ✅ Add ID first
       formData.append("title", title);
       if (productImage) formData.append("productImage", productImage);
       formData.append("description", description);
@@ -152,7 +154,7 @@ const AddProductModal: React.FC<{
         )
       );
       formData.append("prices", JSON.stringify(prices)); // ✅ Send as single string
-      formData.append("id", crypto.randomUUID()); // ✅ Ensure an ID is provided
+      // formData.append("id", crypto.randomUUID()); // ✅ Ensure an ID is provided
       colorSwatchFiles.forEach((file) => {
         if (file) formData.append("colorSwatchImages", file);
       });

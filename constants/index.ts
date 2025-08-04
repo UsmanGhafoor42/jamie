@@ -41,6 +41,10 @@ export const navLinks = [
     name: "Apparel",
     href: "/apparel",
   },
+  {
+    name: "Dashboard",
+    href: "/dashboard",
+  },
 ];
 
 export const footerLinks = [
@@ -63,5 +67,20 @@ export const footerLinks = [
   {
     name: "FAQ",
     href: "/faq",
+  },
+];
+
+export const adminNavLinks = [
+  {
+    name: "Home",
+    href: "/",
+  },
+  {
+    name: "Add Product",
+    href: "/dashboard/add-product",
+  },
+  {
+    name: "Manage Orders",
+    href: "/dashboard/manage-orders",
   },
 ];
