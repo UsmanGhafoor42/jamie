@@ -6,6 +6,8 @@ import Image from "next/image";
 import products from "../apparelProducts.json";
 import { useParams } from "next/navigation";
 
+import axios from "axios";
+
 // Sticker locations and prices
 const STICKER_LOCATIONS = [
   { label: "Left Chest", value: "left_chest", price: 3.75 },
@@ -132,22 +134,69 @@ const Page = () => {
   const grandTotal = (productTotal + imprintTotal + optionsTotal).toFixed(2);
 
   // Add to cart handler
-  const handleAddToCart = () => {
-    const data = {
-      sizes: sizeQuantities,
-      color: selectedColor,
-      imprint: Object.fromEntries(Object.entries(imprint).filter(([, v]) => v)),
-      options: selectedOptions,
-      orderNotes,
-      totals: {
-        productTotal,
-        imprintTotal,
-        optionsTotal,
-        grandTotal,
-      },
-    };
-    console.log("Cart Data:", data);
-    alert("Order added to cart! Check console for data.");
+  // const handleAddToCart = () => {
+  //   const data = {
+  //     sizes: sizeQuantities,
+  //     color: selectedColor,
+  //     imprint: Object.fromEntries(Object.entries(imprint).filter(([, v]) => v)),
+  //     options: selectedOptions,
+  //     orderNotes,
+  //     totals: {
+  //       productTotal,
+  //       imprintTotal,
+  //       optionsTotal,
+  //       grandTotal,
+  //     },
+  //   };
+  //   console.log("Cart Data:", data);
+  //   alert("Order added to cart! Check console for data.");
+  // };
+
+  const handleAddToCart = async () => {
+    try {
+      const formData = new FormData();
+
+      // Append basic product details
+      formData.append("productId", String(product.id));
+      formData.append("title", product.title);
+      formData.append("color", selectedColor);
+      formData.append("orderNotes", orderNotes);
+
+      // Append sizes & quantities
+      formData.append("sizes", JSON.stringify(sizeQuantities));
+
+      // Append imprint files (only those uploaded)
+      Object.entries(imprint).forEach(([location, file]) => {
+        if (file) {
+          formData.append(`imprintFiles`, file);
+          formData.append(`imprintLocations[]`, location); // store location key
+        }
+      });
+
+      // Append selected extra options
+      formData.append("options", JSON.stringify(selectedOptions));
+
+      // Append totals
+      formData.append("productTotal", productTotal.toFixed(2));
+      formData.append("imprintTotal", imprintTotal.toFixed(2));
+      formData.append("optionsTotal", optionsTotal.toFixed(2));
+      formData.append("grandTotal", grandTotal);
+
+      // Send to backend
+      await axios.post(
+        "http://localhost:5000/api/cart/add", // change to your backend URL
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      alert("Order added to cart!");
+    } catch (error) {
+      console.error("Add to cart failed:", error);
+      alert("Failed to add to cart. Please login or try again.");
+    }
   };
 
   // --- UI ---
