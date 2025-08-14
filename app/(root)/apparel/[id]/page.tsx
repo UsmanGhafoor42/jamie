@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
-import products from "../apparelProducts.json";
 import { useParams } from "next/navigation";
 
 import axios from "axios";
@@ -34,10 +33,26 @@ const EXTRA_OPTIONS = [
 type StickerKey = (typeof STICKER_LOCATIONS)[number]["value"];
 type OptionKey = (typeof EXTRA_OPTIONS)[number]["value"];
 
+type ApiPriceMap = Record<string, { price: number; description?: string }>;
+type ApiPriceArrayItem = { size: string; price: number };
+
+type ApiProduct = {
+  _id?: string;
+  id?: number | string;
+  title: string;
+  productImage: string;
+  colorSwatches?: { image?: string; name?: string; hex?: string }[];
+  finishingMeasurementTable?: (string | number)[][];
+  details?: string[];
+  description?: string;
+  prices?: ApiPriceMap | ApiPriceArrayItem[];
+};
+
 const Page = () => {
   const { id } = useParams();
-  // All useState/useEffect hooks here (move before any early return)
-  // We'll use empty arrays/objects as fallback for initial state
+
+  const [product, setProduct] = useState<ApiProduct | null>(null);
+  const [loadingProduct, setLoadingProduct] = useState<boolean>(true);
   const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>(
     {}
   );
@@ -46,50 +61,76 @@ const Page = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [orderNotes, setOrderNotes] = useState<string>("");
 
-  // Always call hooks before any early return
-  React.useEffect(() => {
-    if (!products.find((p) => p.id === Number(id))) return;
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    if (!API_URL || !id) {
+      setLoadingProduct(false);
+      return;
+    }
+    setLoadingProduct(true);
+    axios
+      .get(`${API_URL}/apparel/products/${id}`)
+      .then((res) => {
+        const data = res.data as { product?: ApiProduct } | ApiProduct;
+        const p = (data as any).product ?? data;
+        setProduct(p as ApiProduct);
+      })
+      .catch(() => setProduct(null));
+    setLoadingProduct(false);
+  }, [id]);
+
+  const SHIRT_SIZES = useMemo(() => {
+    if (!product || !product.prices)
+      return [] as { label: string; value: string; price: number }[];
+    if (Array.isArray(product.prices)) {
+      return (product.prices as ApiPriceArrayItem[]).map((p) => ({
+        label: p.size,
+        value: p.size,
+        price: p.price,
+      }));
+    }
+    const map = product.prices as ApiPriceMap;
+    return Object.entries(map).map(([size, info]) => ({
+      label: size,
+      value: size,
+      price: Number(info?.price ?? 0),
+    }));
+  }, [product]);
+
+  useEffect(() => {
+    // initialize size quantities and color once product is loaded
+    if (!product) return;
     setSizeQuantities(
-      (products.find((p) => p.id === Number(id))?.prices || []).reduce(
-        (acc, s) => ({ ...acc, [s.size]: 0 }),
-        {}
-      )
+      SHIRT_SIZES.reduce<Record<string, number>>((acc, s) => {
+        acc[s.value] = 0;
+        return acc;
+      }, {})
     );
-    setSelectedColor(
-      products.find((p) => p.id === Number(id))?.colorSwatches?.[0]?.hex || ""
-    );
+    setSelectedColor(product.colorSwatches?.[0]?.hex || "");
     setimprint(
       STICKER_LOCATIONS.reduce(
         (acc, loc) => ({ ...acc, [loc.value]: null }),
         {}
       )
     );
-  }, [id]);
+  }, [product, SHIRT_SIZES.length]);
 
-  const product = products.find((p) => p.id === Number(id));
+  if (loadingProduct) return <div>Loading product...</div>;
   if (!product) return <div>Product not found</div>;
 
   // Use product.prices for sizes
-  const SHIRT_SIZES =
-    product.prices?.map((p) => ({
-      label: p.size,
-      value: p.size,
-      price: p.price,
-    })) || [];
+  // SHIRT_SIZES computed via useMemo above
 
   // Use product.colorSwatches for color selection
   const colorSwatches =
     product.colorSwatches?.map((c) => ({
-      name: c.name,
-      value: c.hex,
-      image: c.image,
+      name: c?.name || "",
+      value: c?.hex || "",
+      image: c?.image || "",
     })) || [];
 
   // Use product.finishingMeasurementTable for measurement table
-  const measurementTable =
-    product.finishingMeasurementTable ||
-    product.finishingMeasurementTable ||
-    [];
+  const measurementTable = product.finishingMeasurementTable || [];
 
   // Handle size quantity change
   const handleSizeQtyChange = (size: string, qty: number) => {
@@ -157,7 +198,10 @@ const Page = () => {
       const formData = new FormData();
 
       // Append basic product details
-      formData.append("productId", String(product.id));
+      formData.append(
+        "productId",
+        String((product as any)._id ?? (product as any).id ?? id)
+      );
       formData.append("title", product.title);
       formData.append("color", selectedColor);
       formData.append("orderNotes", orderNotes);
