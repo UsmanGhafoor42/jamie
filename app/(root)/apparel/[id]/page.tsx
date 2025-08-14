@@ -320,7 +320,13 @@ const Page = () => {
 
           {/* Shirt color selection */}
           <div className="mb-4">
-            <label className="block font-medium mb-1">Color:</label>
+            <label className="block font-medium mb-1">
+              Color:{" "}
+              <span>
+                {colorSwatches.find((c) => c.value === selectedColor)?.name ||
+                  "N/A"}
+              </span>
+            </label>
             <div className="flex flex-wrap gap-2">
               {colorSwatches.map((color, i) => (
                 <button
@@ -335,12 +341,11 @@ const Page = () => {
                   onClick={() => handleColorSelect(color.value)}
                   aria-label={color.name}
                   title={color.name}
-                >
-                  {/* Optionally show image preview on hover or inside swatch */}
-                </button>
+                ></button>
               ))}
             </div>
           </div>
+          {/* Optionally show image preview on hover or inside swatch */}
 
           {/* Shirt size and quantity selection */}
           <div className="mb-4">
