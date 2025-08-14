@@ -49,7 +49,7 @@ type ApiProduct = {
 };
 
 const Page = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
 
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [loadingProduct, setLoadingProduct] = useState<boolean>(true);
@@ -67,16 +67,25 @@ const Page = () => {
       setLoadingProduct(false);
       return;
     }
+    let isMounted = true;
     setLoadingProduct(true);
-    axios
-      .get(`${API_URL}/apparel/products/${id}`)
-      .then((res) => {
-        const data = res.data as { product?: ApiProduct } | ApiProduct;
-        const p = (data as any).product ?? data;
-        setProduct(p as ApiProduct);
-      })
-      .catch(() => setProduct(null));
-    setLoadingProduct(false);
+    (async () => {
+      try {
+        const res = await axios.get(`${API_URL}/apparel/products/${id}`);
+        type ProductResponse = { product?: ApiProduct } | ApiProduct;
+        const data = res.data as ProductResponse;
+        const p =
+          (data as { product?: ApiProduct }).product ?? (data as ApiProduct);
+        if (isMounted) setProduct(p);
+      } catch {
+        if (isMounted) setProduct(null);
+      } finally {
+        if (isMounted) setLoadingProduct(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   const SHIRT_SIZES = useMemo(() => {
@@ -113,7 +122,7 @@ const Page = () => {
         {}
       )
     );
-  }, [product, SHIRT_SIZES.length]);
+  }, [product, SHIRT_SIZES]);
 
   if (loadingProduct) return <div>Loading product...</div>;
   if (!product) return <div>Product not found</div>;
@@ -198,10 +207,10 @@ const Page = () => {
       const formData = new FormData();
 
       // Append basic product details
-      formData.append(
-        "productId",
-        String((product as any)._id ?? (product as any).id ?? id)
-      );
+      const productId: string =
+        (product?._id as string | undefined) ??
+        (product?.id !== undefined ? String(product.id) : id);
+      formData.append("productId", productId);
       formData.append("title", product.title);
       formData.append("color", selectedColor);
       formData.append("orderNotes", orderNotes);

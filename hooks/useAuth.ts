@@ -25,7 +25,7 @@ export function useUser() {
         })
         .then((res) => {
           setUser(res.data.user);
-          console.log(res.data.user);
+          // console.log(res.data.user);
         })
         .catch(() => setUser(null))
     ).finally(() => setLoading(false));
