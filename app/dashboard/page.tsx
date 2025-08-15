@@ -1,7 +1,14 @@
-import { redirect } from "next/navigation";
+"use client"; // ensures client-side redirect will always run
 
-const page = () => {
-  redirect("/dashboard/add-product");
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default page;
+export default function Page() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/dashboard/add-product");
+  }, [router]);
+
+  return null; // nothing to render
+}
