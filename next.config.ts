@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ["localhost"], // 👈 or your actual backend domain in production
+    domains: ["localhost", "api.hotmarketdtf.com"], // 👈 or your actual backend domain in production
   },
 };
 
