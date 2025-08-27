@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Trash2, Loader2 } from "lucide-react";
 import axios from "axios";
@@ -29,14 +29,7 @@ const ShoppingCart: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [deleteMultipleLoading, setDeleteMultipleLoading] = useState(false);
 
-  // Fetch cart data on component mount
-  useEffect(() => {
-    if (user) {
-      fetchCart();
-    }
-  }, [user]);
-
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -53,15 +46,14 @@ const ShoppingCart: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const handleQuantityChange = (id: string, value: number) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item._id === id ? { ...item, quantity: value } : item
-      )
-    );
-  };
+  // Fetch cart data on component mount
+  useEffect(() => {
+    if (user) {
+      fetchCart();
+    }
+  }, [user, fetchCart]);
 
   const handleDelete = async (id: string) => {
     if (!user) {
@@ -85,7 +77,9 @@ const ShoppingCart: React.FC = () => {
     } catch (error) {
       console.error("Error deleting cart item:", error);
       if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as any;
+        const axiosError = error as {
+          response?: { data?: unknown; status?: number };
+        };
         console.error("Response data:", axiosError.response?.data);
         console.error("Response status:", axiosError.response?.status);
       }
@@ -313,7 +307,7 @@ const ShoppingCart: React.FC = () => {
                         <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full inline-block">
                           Size:&nbsp;
                           {Object.entries(item.sizeAndQuantity)
-                            .filter(([size, qty]) => qty > 0)
+                            .filter(([, qty]) => qty > 0)
                             .map(([size, qty]) => `${size} (${qty})`)
                             .join(", ") || "N/A"}
                         </span>
@@ -416,8 +410,17 @@ const ShoppingCart: React.FC = () => {
                           Size: {item.size}
                         </span>
                       )}
+                      {item.sizeAndQuantity && (
+                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+                          Size:&nbsp;
+                          {Object.entries(item.sizeAndQuantity)
+                            .filter(([, qty]) => qty > 0)
+                            .map(([size, qty]) => `${size} (${qty})`)
+                            .join(", ") || "N/A"}
+                        </span>
+                      )}
                       {item.colorsName && (
-                        <span className="text-xs text-gray-100 px-2 py-1 rounded-full">
+                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
                           Color: {item.colorsName}
                         </span>
                       )}
