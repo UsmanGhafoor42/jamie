@@ -9,6 +9,8 @@ import React, {
 } from "react";
 import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const GANG_SHEET_SIZES = [
   { label: '11" x 12.5"', value: "11x12.5", price: 5 },
@@ -27,6 +29,7 @@ const OPTIONS = [
 ];
 
 const Page = () => {
+  const router = useRouter();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -92,19 +95,31 @@ const Page = () => {
   const total = (basePrice * quantity + optionsPrice).toFixed(2);
 
   // Handle add to cart
-  const handleAddToCart = () => {
-    const data = {
-      image: uploadedFile,
-      imagePreview,
-      size: selectedSize,
-      options: selectedOptions,
-      orderNotes,
-      quantity,
-      total,
-    };
-    // In real app, send to backend/cart
-    console.log("Cart Data:", data);
-    alert("Order added to cart! Check console for data.");
+  const handleAddToCart = async () => {
+    if (!uploadedFile || !selectedSize) return;
+
+    const formData = new FormData();
+    formData.append("title", "Gang Sheet");
+    formData.append("image", uploadedFile);
+    formData.append("size", selectedSize);
+    formData.append("quantity", quantity.toString());
+    formData.append("total", total);
+    formData.append("options", JSON.stringify(selectedOptions));
+    formData.append("orderNotes", orderNotes);
+
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/cart/add`, // or your actual backend endpoint
+        formData,
+        {
+          withCredentials: true, // send cookies (JWT) automatically
+        }
+      );
+      alert("Order added to cart!");
+      router.push("/cart");
+    } catch {
+      alert("Failed to add to cart. Please login or try again.");
+    }
   };
 
   return (

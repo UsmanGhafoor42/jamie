@@ -10,6 +10,7 @@ import React, {
 import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const GANG_SHEET_SIZES = [
   { label: '2" x 2"', value: "2x2", price: 1.05 },
@@ -34,6 +35,7 @@ const OPTIONS = [
 ];
 
 const Page = () => {
+  const router = useRouter();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -117,7 +119,7 @@ const Page = () => {
     if (!uploadedFile || !selectedSize) return;
 
     const formData = new FormData();
-    formData.append("title", "Garam Anday");
+    formData.append("title", "Individual Sheet");
     formData.append("image", uploadedFile);
     formData.append("size", selectedSize);
     formData.append("quantity", quantity.toString());
@@ -127,13 +129,14 @@ const Page = () => {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/cart/add", // or your actual backend endpoint
+        `${process.env.NEXT_PUBLIC_API_URL}/cart/add`, // or your actual backend endpoint
         formData,
         {
           withCredentials: true, // send cookies (JWT) automatically
         }
       );
       alert("Order added to cart!");
+      router.push("/cart");
     } catch {
       alert("Failed to add to cart. Please login or try again.");
     }

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export type User = {
+  _id: string;
   name: string;
   email: string;
   role: string;

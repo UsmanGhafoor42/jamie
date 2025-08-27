@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 // Sticker locations and prices
 const STICKER_LOCATIONS = [
@@ -50,7 +51,7 @@ type ApiProduct = {
 
 const Page = () => {
   const { id } = useParams<{ id: string }>();
-
+  const router = useRouter();
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [loadingProduct, setLoadingProduct] = useState<boolean>(true);
   const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>(
@@ -213,6 +214,15 @@ const Page = () => {
       formData.append("productId", productId);
       formData.append("title", product.title);
       formData.append("color", selectedColor);
+
+      // Find and append color name
+      const selectedColorObj = colorSwatches.find(
+        (c) => c.value === selectedColor
+      );
+      if (selectedColorObj?.name) {
+        formData.append("colorsName", selectedColorObj.name);
+      }
+
       formData.append("orderNotes", orderNotes);
 
       // Append sizes & quantities
@@ -237,7 +247,7 @@ const Page = () => {
 
       // Send to backend
       await axios.post(
-        "http://localhost:5000/api/cart/add", // change to your backend URL
+        `${process.env.NEXT_PUBLIC_API_URL}/cart/add`, // change to your backend URL
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -246,6 +256,7 @@ const Page = () => {
       );
 
       alert("Order added to cart!");
+      router.push("/cart");
     } catch (error) {
       console.error("Add to cart failed:", error);
       alert("Failed to add to cart. Please login or try again.");

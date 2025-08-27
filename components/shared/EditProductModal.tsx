@@ -2,17 +2,18 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
-import EditProductModal from "../../../components/shared/EditProductModal";
 
 interface ColorSwatch {
   name: string;
   hex: string;
   image: string;
 }
+
 interface Price {
   size: string;
   price: number;
 }
+
 interface ApparelProduct {
   _id?: string;
   title: string;
@@ -24,22 +25,24 @@ interface ApparelProduct {
   prices: Price[];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-const fetchProducts = async (): Promise<ApparelProduct[]> => {
-  if (!API_URL) throw new Error("API URL not set");
-  const res = await axios.get(`${API_URL}/apparel/products`);
-  const data = res.data as { products: ApparelProduct[] };
-  return data.products;
-};
-
-const AddProductModal: React.FC<{
+interface EditProductModalProps {
   open: boolean;
   onClose: () => void;
-  onProductAdded: () => void;
-}> = ({ open, onClose, onProductAdded }) => {
+  onProductUpdated: () => void;
+  product: ApparelProduct | null;
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const EditProductModal: React.FC<EditProductModalProps> = ({
+  open,
+  onClose,
+  onProductUpdated,
+  product,
+}) => {
   const [title, setTitle] = useState("");
   const [productImage, setProductImage] = useState<File | null>(null);
+  const [currentProductImage, setCurrentProductImage] = useState("");
   const [description, setDescription] = useState("");
   const [details, setDetails] = useState<string[]>([""]);
   const [finishingMeasurementTable, setFinishingMeasurementTable] = useState<
@@ -67,6 +70,22 @@ const AddProductModal: React.FC<{
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Populate form with product data when modal opens
+  useEffect(() => {
+    if (product && open) {
+      setTitle(product.title);
+      setCurrentProductImage(product.productImage);
+      setDescription(product.description);
+      setDetails(product.details);
+      setFinishingMeasurementTable(product.finishingMeasurementTable);
+      setColorSwatches(product.colorSwatches);
+      setColorSwatchFiles(
+        new Array(product.colorSwatches.length).fill(undefined)
+      );
+      setPrices(product.prices);
+    }
+  }, [product, open]);
+
   const handleColorSwatchChange = (
     idx: number,
     field: keyof ColorSwatch,
@@ -78,6 +97,7 @@ const AddProductModal: React.FC<{
       return updated;
     });
   };
+
   const handleColorSwatchFile = (idx: number, file: File | null) => {
     setColorSwatchFiles((prev) => {
       const updated = [...prev];
@@ -85,10 +105,12 @@ const AddProductModal: React.FC<{
       return updated;
     });
   };
+
   const handleAddColorSwatch = () => {
     setColorSwatches((prev) => [...prev, { name: "", hex: "", image: "" }]);
     setColorSwatchFiles((prev) => [...prev, undefined]);
   };
+
   const handleRemoveColorSwatch = (idx: number) => {
     setColorSwatches((prev) => prev.filter((_, i) => i !== idx));
     setColorSwatchFiles((prev) => prev.filter((_, i) => i !== idx));
@@ -101,6 +123,7 @@ const AddProductModal: React.FC<{
       return updated;
     });
   };
+
   const handleAddDetail = () => setDetails((prev) => [...prev, ""]);
   const handleRemoveDetail = (idx: number) =>
     setDetails((prev) => prev.filter((_, i) => i !== idx));
@@ -132,16 +155,17 @@ const AddProductModal: React.FC<{
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!product?._id) return;
+
     setLoading(true);
     setError(null);
     setSuccess(false);
+
     try {
       if (!API_URL) throw new Error("API URL not set");
+
       const formData = new FormData();
-      const productId = crypto.randomUUID(); // <-- generate ID first
-      formData.append("id", productId); // ✅ Add ID first
       formData.append("title", title);
-      if (productImage) formData.append("productImage", productImage);
       formData.append("description", description);
       formData.append("details", JSON.stringify(details));
       formData.append(
@@ -154,39 +178,62 @@ const AddProductModal: React.FC<{
           colorSwatches.map((swatch) => ({ ...swatch, image: swatch.image }))
         )
       );
-      formData.append("prices", JSON.stringify(prices)); // ✅ Send as single string
-      // formData.append("id", crypto.randomUUID()); // ✅ Ensure an ID is provided
+      formData.append("prices", JSON.stringify(prices));
+
+      // Only append new product image if one was selected
+      if (productImage) {
+        formData.append("productImage", productImage);
+      }
+
+      // Append color swatch files (only those with new files)
       colorSwatchFiles.forEach((file) => {
         if (file) formData.append("colorSwatchImages", file);
       });
-      await axios.post(`${API_URL}/apparel/products`, formData);
+
+      await axios.patch(
+        `${API_URL}/apparel/products/${product._id}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
       setSuccess(true);
-      onProductAdded();
+      onProductUpdated();
       onClose();
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Error adding product");
+        setError("Error updating product");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  if (!open) return null;
+  if (!open || !product) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 relative overflow-y-auto max-h-[90vh]">
         <button className="absolute top-2 right-2 text-2xl" onClick={onClose}>
           &times;
         </button>
-        <h2 className="text-2xl font-bold mb-4">Add Apparel Product</h2>
+        <h2 className="text-2xl font-bold mb-4">Edit Apparel Product</h2>
+
         {error && (
           <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
             {error}
           </div>
         )}
+
+        {success && (
+          <div className="bg-green-100 text-green-700 px-4 py-2 rounded mb-4">
+            Product updated successfully!
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium">Title</label>
@@ -197,15 +244,31 @@ const AddProductModal: React.FC<{
               required
             />
           </div>
+
           <div>
             <label className="block font-medium">Product Image</label>
+            {currentProductImage && (
+              <div className="mb-2">
+                <Image
+                  src={currentProductImage}
+                  alt="Current product image"
+                  width={100}
+                  height={100}
+                  className="object-cover rounded border"
+                />
+                <p className="text-sm text-gray-500 mt-1">Current image</p>
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"
               onChange={(e) => handleProductImage(e.target.files?.[0] || null)}
-              required
             />
+            <p className="text-sm text-gray-500 mt-1">
+              Leave empty to keep current image
+            </p>
           </div>
+
           <div>
             <label className="block font-medium">Description</label>
             <textarea
@@ -215,6 +278,7 @@ const AddProductModal: React.FC<{
               required
             />
           </div>
+
           <div>
             <label className="block font-medium">Details</label>
             {details.map((d, i) => (
@@ -242,6 +306,7 @@ const AddProductModal: React.FC<{
               + Add Detail
             </button>
           </div>
+
           <div>
             <label className="block font-medium mb-1">
               Finishing Measurement Table
@@ -272,6 +337,7 @@ const AddProductModal: React.FC<{
               </table>
             </div>
           </div>
+
           <div>
             <label className="block font-medium mb-1">Color Swatches</label>
             {colorSwatches.map((swatch, i) => (
@@ -294,13 +360,24 @@ const AddProductModal: React.FC<{
                   }
                   required
                 />
+                {swatch.image && (
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={swatch.image}
+                      alt={swatch.name}
+                      width={40}
+                      height={40}
+                      className="object-cover rounded border"
+                    />
+                    <span className="text-xs text-gray-500">Current</span>
+                  </div>
+                )}
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) =>
                     handleColorSwatchFile(i, e.target.files?.[0] || null)
                   }
-                  required
                 />
                 <button
                   type="button"
@@ -319,6 +396,7 @@ const AddProductModal: React.FC<{
               + Add Color Swatch
             </button>
           </div>
+
           <div>
             <label className="block font-medium mb-1">Prices</label>
             {prices.map((p, i) => (
@@ -343,6 +421,7 @@ const AddProductModal: React.FC<{
               </div>
             ))}
           </div>
+
           <div className="flex justify-end gap-2">
             <button
               type="button"
@@ -356,213 +435,13 @@ const AddProductModal: React.FC<{
               className="px-4 py-2 rounded bg-[var(--green)] text-white"
               disabled={loading}
             >
-              {loading ? "Adding..." : "Add Product"}
+              {loading ? "Updating..." : "Update Product"}
             </button>
           </div>
         </form>
-        {success && (
-          <div className="text-green-600 mt-2">Product added successfully!</div>
-        )}
       </div>
     </div>
   );
 };
 
-const ProductTable: React.FC<{
-  products: ApparelProduct[];
-  onEdit: (product: ApparelProduct) => void;
-  onDelete: (productId: string | undefined) => void;
-}> = ({ products, onEdit, onDelete }) => (
-  <div className="overflow-x-auto mt-6">
-    <table className="min-w-full border border-gray-300 text-sm">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="px-3 py-3 border text-left font-semibold min-w-[80px]">
-            Image
-          </th>
-          <th className="px-3 py-3 border text-left font-semibold min-w-[200px]">
-            Title
-          </th>
-          <th className="px-3 py-3 border text-left font-semibold min-w-[250px]">
-            Description
-          </th>
-          <th className="px-3 py-3 border text-left font-semibold min-w-[200px]">
-            Details
-          </th>
-          <th className="px-3 py-3 border text-left font-semibold min-w-[120px]">
-            Colors
-          </th>
-          <th className="px-3 py-3 border text-left font-semibold min-w-[150px]">
-            Prices
-          </th>
-          <th className="px-3 py-3 border text-left font-semibold min-w-[120px]">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {products.map((p) => (
-          <tr key={p._id || p.title} className="hover:bg-gray-50">
-            <td className="border px-3 py-3 align-top">
-              <Image
-                src={p.productImage}
-                alt={p.title}
-                width={60}
-                height={60}
-                className="object-cover rounded border"
-              />
-            </td>
-            <td className="border px-3 py-3 align-top">
-              <div className="font-semibold text-gray-900 break-words">
-                {p.title}
-              </div>
-            </td>
-            <td className="border px-3 py-3 align-top">
-              <div className="text-gray-700 break-words leading-relaxed">
-                {p.description}
-              </div>
-            </td>
-            <td className="border px-3 py-3 align-top">
-              <ul className="list-disc list-inside text-gray-700">
-                {p.details.map((d, i) => (
-                  <li key={i} className="text-sm mb-1">
-                    {d}
-                  </li>
-                ))}
-              </ul>
-            </td>
-            <td className="border px-3 py-3 align-top">
-              <div className="flex flex-wrap gap-1">
-                {p.colorSwatches.map((c, i) => (
-                  <span
-                    key={i}
-                    className="inline-block w-5 h-5 rounded-full border"
-                    style={{ background: c.hex }}
-                    title={c.name}
-                  ></span>
-                ))}
-              </div>
-            </td>
-            <td className="border px-3 py-3 align-top">
-              <div className="space-y-1">
-                {p.prices.map((pr, i) => (
-                  <div key={i} className="text-sm text-gray-700">
-                    <span className="font-medium">{pr.size}:</span>
-                    <span className="text-[var(--green)] font-semibold ml-1">
-                      ${pr.price.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </td>
-            <td className="border px-3 py-3 align-top">
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => onEdit(p)}
-                  className="bg-[var(--green)] hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete(p._id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
-const AddProductPage: React.FC = () => {
-  const [products, setProducts] = useState<ApparelProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ApparelProduct | null>(
-    null
-  );
-
-  const loadProducts = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchProducts();
-      setProducts(data);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error loading products");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (productId: string | undefined) => {
-    if (!productId) return;
-
-    if (confirm("Are you sure you want to delete this product?")) {
-      try {
-        await axios.delete(`${API_URL}/apparel/products/${productId}`);
-        loadProducts(); // Reload the products list
-      } catch (err) {
-        console.error("Error deleting product:", err);
-        alert("Failed to delete product");
-      }
-    }
-  };
-
-  const handleEdit = (product: ApparelProduct) => {
-    setEditingProduct(product);
-    setEditModalOpen(true);
-  };
-
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  return (
-    <main className="p-4 lg:p-12 layout">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Apparel Products</h1>
-        <button
-          className="bg-[var(--green)] text-white px-4 py-2 rounded shadow hover:bg-green-700"
-          onClick={() => setModalOpen(true)}
-        >
-          + Add Product
-        </button>
-      </div>
-      {loading ? (
-        <div>Loading products...</div>
-      ) : error ? (
-        <div className="text-red-600">{error}</div>
-      ) : (
-        <ProductTable
-          products={products}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
-      <AddProductModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onProductAdded={loadProducts}
-      />
-      <EditProductModal
-        open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        onProductUpdated={loadProducts}
-        product={editingProduct}
-      />
-    </main>
-  );
-};
-
-export default AddProductPage;
+export default EditProductModal;
