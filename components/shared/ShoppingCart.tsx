@@ -493,12 +493,15 @@ const ShoppingCart: React.FC = () => {
         </div>
 
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
-          <button className="flex-1 bg-[var(--green)] hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 cursor-pointer shadow-sm">
+          <Link
+            href="/checkout"
+            className="flex-1 bg-[var(--green)] hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 cursor-pointer shadow-sm text-center"
+          >
             Proceed to Checkout
-          </button>
+          </Link>
           <Link
             href="/"
-            className="sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors duration-200"
+            className="sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors duration-200 text-center"
           >
             Continue Shopping
           </Link>
