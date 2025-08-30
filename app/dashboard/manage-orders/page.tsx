@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useUser } from "../../../hooks/useAuth";
 import axios from "axios";
 import Image from "next/image";
@@ -12,11 +12,7 @@ import {
   Clock,
   Eye,
   Search,
-  Filter,
   Download,
-  Calendar,
-  MapPin,
-  CreditCard,
   Edit3,
   Save,
   X,
@@ -195,21 +191,8 @@ const AdminOrderManagement = () => {
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [editingStatus, setEditingStatus] = useState("");
   const [editingNote, setEditingNote] = useState("");
-  const [editingShipping, setEditingShipping] = useState({
-    trackingNumber: "",
-    estimatedDelivery: "",
-    actualDelivery: "",
-    shippingMethod: "",
-  });
-  const [editingAdminNotes, setEditingAdminNotes] = useState("");
 
-  useEffect(() => {
-    if (user) {
-      fetchOrders();
-    }
-  }, [user, filters, pagination.currentPage]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams({
@@ -228,7 +211,10 @@ const AdminOrderManagement = () => {
         { withCredentials: true }
       );
 
-      const responseData = response.data as any;
+      const responseData = response.data as {
+        orders?: Order[];
+        pagination?: PaginationInfo;
+      };
       setOrders(responseData.orders || []);
       setPagination(
         responseData.pagination || {
@@ -245,7 +231,13 @@ const AdminOrderManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.currentPage, filters]);
+
+  useEffect(() => {
+    if (user) {
+      fetchOrders();
+    }
+  }, [user, filters, pagination.currentPage, fetchOrders]);
 
   const handleStatusUpdate = async (orderId: string) => {
     try {
@@ -264,7 +256,7 @@ const AdminOrderManagement = () => {
           order._id === orderId
             ? {
                 ...order,
-                status: editingStatus as any,
+                status: editingStatus as Order["status"],
                 statusHistory: [
                   ...order.statusHistory,
                   {
@@ -284,67 +276,6 @@ const AdminOrderManagement = () => {
     } catch (error) {
       console.error("Error updating order status:", error);
       alert("Failed to update order status");
-    }
-  };
-
-  const handleShippingUpdate = async (orderId: string) => {
-    try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/orders/${orderId}/shipping`,
-        editingShipping,
-        { withCredentials: true }
-      );
-
-      // Update local state
-      setOrders((prev) =>
-        prev.map((order) =>
-          order._id === orderId
-            ? {
-                ...order,
-                shipping: {
-                  ...order.shipping,
-                  ...editingShipping,
-                },
-              }
-            : order
-        )
-      );
-
-      setEditingOrder(null);
-      setEditingShipping({
-        trackingNumber: "",
-        estimatedDelivery: "",
-        actualDelivery: "",
-        shippingMethod: "",
-      });
-    } catch (error) {
-      console.error("Error updating shipping info:", error);
-      alert("Failed to update shipping information");
-    }
-  };
-
-  const handleAdminNotesUpdate = async (orderId: string) => {
-    try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/orders/${orderId}/notes`,
-        { note: editingAdminNotes },
-        { withCredentials: true }
-      );
-
-      // Update local state
-      setOrders((prev) =>
-        prev.map((order) =>
-          order._id === orderId
-            ? { ...order, adminNotes: editingAdminNotes }
-            : order
-        )
-      );
-
-      setEditingOrder(null);
-      setEditingAdminNotes("");
-    } catch (error) {
-      console.error("Error updating admin notes:", error);
-      alert("Failed to update admin notes");
     }
   };
 
@@ -382,34 +313,16 @@ const AdminOrderManagement = () => {
     }
   };
 
-  const startEditing = (order: Order, type: string) => {
+  const startEditing = (order: Order) => {
     setEditingOrder(order._id);
     setEditingStatus(order.status);
     setEditingNote("");
-    setEditingShipping({
-      trackingNumber: order.shipping.trackingNumber || "",
-      estimatedDelivery: order.shipping.estimatedDelivery
-        ? new Date(order.shipping.estimatedDelivery).toISOString().split("T")[0]
-        : "",
-      actualDelivery: order.shipping.actualDelivery
-        ? new Date(order.shipping.actualDelivery).toISOString().split("T")[0]
-        : "",
-      shippingMethod: order.shipping.method || "",
-    });
-    setEditingAdminNotes(order.adminNotes || "");
   };
 
   const cancelEditing = () => {
     setEditingOrder(null);
     setEditingStatus("");
     setEditingNote("");
-    setEditingShipping({
-      trackingNumber: "",
-      estimatedDelivery: "",
-      actualDelivery: "",
-      shippingMethod: "",
-    });
-    setEditingAdminNotes("");
   };
 
   if (loading && orders.length === 0) {
@@ -712,7 +625,7 @@ const AdminOrderManagement = () => {
                         </div>
                       ) : (
                         <button
-                          onClick={() => startEditing(order, "status")}
+                          onClick={() => startEditing(order)}
                           className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
                         >
                           <Edit3 className="w-4 h-4" />

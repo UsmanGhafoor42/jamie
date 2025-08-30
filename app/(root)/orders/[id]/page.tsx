@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "../../../../hooks/useAuth";
 import axios from "axios";
@@ -14,7 +14,6 @@ import {
   ArrowLeft,
   MapPin,
   CreditCard,
-  Calendar,
   RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
@@ -150,17 +149,8 @@ const OrderDetailsPage = () => {
   const params = useParams();
   const router = useRouter();
   const { user } = useUser();
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [reordering, setReordering] = useState(false);
 
-  useEffect(() => {
-    if (user && params.id) {
-      fetchOrderDetails();
-    }
-  }, [user, params.id]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -174,7 +164,17 @@ const OrderDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, router]);
+
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [reordering, setReordering] = useState(false);
+
+  useEffect(() => {
+    if (user && params.id) {
+      fetchOrderDetails();
+    }
+  }, [user, params.id, fetchOrderDetails]);
 
   const handleReorder = async () => {
     if (!order) return;

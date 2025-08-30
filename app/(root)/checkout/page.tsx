@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../../hooks/useAuth";
 import axios from "axios";
@@ -74,6 +74,21 @@ const CheckoutPage = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const fetchCart = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/cart/mine`,
+        { withCredentials: true }
+      );
+      setCart(response.data as CartItem[]);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+      router.push("/cart");
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
   const [form, setForm] = useState<CheckoutForm>({
     customerInfo: {
       firstName: "",
@@ -110,22 +125,7 @@ const CheckoutPage = () => {
     if (user) {
       fetchCart();
     }
-  }, [user]);
-
-  const fetchCart = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/cart/mine`,
-        { withCredentials: true }
-      );
-      setCart(response.data as CartItem[]);
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-      router.push("/cart");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, fetchCart]);
 
   const handleInputChange = (
     section: keyof CheckoutForm,
@@ -166,7 +166,7 @@ const CheckoutPage = () => {
   };
 
   const validateForm = (): boolean => {
-    const { customerInfo, shippingInfo, paymentData } = form;
+    const { customerInfo, paymentData } = form;
 
     // Basic validation
     if (
@@ -239,7 +239,7 @@ const CheckoutPage = () => {
       );
 
       // Check if the response contains order data (successful order creation)
-      const responseData = response.data as any;
+      const responseData = response.data as { order?: { orderNumber: string } };
       if (responseData.order && responseData.order.orderNumber) {
         alert(
           "Order placed successfully! Order ID: " +
@@ -250,11 +250,13 @@ const CheckoutPage = () => {
         // Handle case where order creation failed
         alert("Order creation failed. Please try again.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Checkout error:", error);
-      alert(
-        error.response?.data?.message || "Checkout failed. Please try again."
-      );
+      const errorMessage =
+        error && typeof error === "object" && "response" in error
+          ? (error.response as { data?: { message?: string } })?.data?.message
+          : "Checkout failed. Please try again.";
+      alert(errorMessage);
     } finally {
       setProcessing(false);
     }

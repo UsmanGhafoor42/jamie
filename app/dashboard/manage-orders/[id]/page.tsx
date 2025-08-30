@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "../../../../hooks/useAuth";
 import axios from "axios";
@@ -12,9 +12,7 @@ import {
   XCircle,
   Clock,
   ArrowLeft,
-  MapPin,
   CreditCard,
-  Calendar,
   Edit3,
   Save,
   X,
@@ -181,13 +179,7 @@ const AdminOrderDetailsPage = () => {
     "status" | "shipping" | "notes" | null
   >(null);
 
-  useEffect(() => {
-    if (user && params.id) {
-      fetchOrderDetails();
-    }
-  }, [user, params.id]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -220,7 +212,13 @@ const AdminOrderDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, router]);
+
+  useEffect(() => {
+    if (user && params.id) {
+      fetchOrderDetails();
+    }
+  }, [user, params.id, fetchOrderDetails]);
 
   const handleStatusUpdate = async () => {
     if (!order) return;
@@ -241,7 +239,7 @@ const AdminOrderDetailsPage = () => {
         prev
           ? {
               ...prev,
-              status: editingStatus as any,
+              status: editingStatus as Order["status"],
               statusHistory: [
                 ...prev.statusHistory,
                 {
