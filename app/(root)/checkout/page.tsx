@@ -36,6 +36,7 @@ interface CheckoutForm {
   };
   shippingInfo: {
     method: string;
+    useBillingAddress: boolean;
     address: {
       street: string;
       city: string;
@@ -105,6 +106,7 @@ const CheckoutPage = () => {
     },
     shippingInfo: {
       method: "standard",
+      useBillingAddress: true,
       address: {
         street: "",
         city: "",
@@ -132,11 +134,31 @@ const CheckoutPage = () => {
     field: string,
     value: string
   ) => {
+    let formattedValue = value;
+
+    // Format card number with spaces
+    if (field === "cardNumber") {
+      formattedValue = value
+        .replace(/\s/g, "")
+        .replace(/(\d{4})/g, "$1 ")
+        .trim();
+    }
+
+    // Format expiration date
+    if (field === "expirationDate") {
+      formattedValue = value.replace(/\D/g, "").replace(/(\d{2})(\d)/, "$1/$2");
+    }
+
+    // Format CVV (numbers only)
+    if (field === "cvv") {
+      formattedValue = value.replace(/\D/g, "");
+    }
+
     setForm((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [field]: value,
+        [field]: formattedValue,
       },
     }));
   };
@@ -165,8 +187,22 @@ const CheckoutPage = () => {
     }));
   };
 
+  const handleUseBillingAddressChange = (useBilling: boolean) => {
+    setForm((prev) => ({
+      ...prev,
+      shippingInfo: {
+        ...prev.shippingInfo,
+        useBillingAddress: useBilling,
+        // If using billing address, copy billing address to shipping
+        address: useBilling
+          ? prev.customerInfo.address
+          : prev.shippingInfo.address,
+      },
+    }));
+  };
+
   const validateForm = (): boolean => {
-    const { customerInfo, paymentData } = form;
+    const { customerInfo, shippingInfo, paymentData } = form;
 
     // Basic validation
     if (
@@ -184,8 +220,21 @@ const CheckoutPage = () => {
       !customerInfo.address.state ||
       !customerInfo.address.zipCode
     ) {
-      alert("Please fill in all required address information");
+      alert("Please fill in all required billing address information");
       return false;
+    }
+
+    // Validate shipping address if different from billing
+    if (!form.shippingInfo.useBillingAddress) {
+      if (
+        !shippingInfo.address.street ||
+        !shippingInfo.address.city ||
+        !shippingInfo.address.state ||
+        !shippingInfo.address.zipCode
+      ) {
+        alert("Please fill in all required shipping address information");
+        return false;
+      }
     }
 
     if (
@@ -198,8 +247,109 @@ const CheckoutPage = () => {
       return false;
     }
 
+    // Validate card number format (basic)
+    if (paymentData.cardNumber.replace(/\s/g, "").length < 13) {
+      alert("Please enter a valid card number");
+      return false;
+    }
+
+    // Validate expiration date format
+    if (!/^\d{2}\/\d{2}$/.test(paymentData.expirationDate)) {
+      alert("Please enter expiration date in MM/YY format");
+      return false;
+    }
+
+    // Validate CVV
+    if (paymentData.cvv.length < 3) {
+      alert("Please enter a valid CVV");
+      return false;
+    }
+
     return true;
   };
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   if (!validateForm()) return;
+
+  //   setProcessing(true);
+
+  //   try {
+  //     const selectedShipping = SHIPPING_METHODS.find(
+  //       (method) => method.id === form.shippingInfo.method
+  //     );
+
+  //     const pricing = {
+  //       subtotal: cart.reduce((sum, item) => sum + item.total, 0),
+  //       tax: 0, // You can add tax calculation logic
+  //       shipping: selectedShipping?.price || 0,
+  //       discount: 0, // You can add discount logic
+  //       total:
+  //         cart.reduce((sum, item) => sum + item.total, 0) +
+  //         (selectedShipping?.price || 0),
+  //     };
+
+  //     // Use billing address for shipping if checkbox is checked
+  //     const shippingAddress = form.shippingInfo.useBillingAddress
+  //       ? form.customerInfo.address
+  //       : form.shippingInfo.address;
+
+  //     const response = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_API_URL}/payment/process`,
+  //       {
+  //         paymentData: form.paymentData,
+  //         customerInfo: form.customerInfo,
+  //         shippingInfo: {
+  //           method: selectedShipping?.name || "Standard Shipping",
+  //           address: shippingAddress,
+  //         },
+  //         cartItems: cart,
+  //         pricing,
+  //       },
+  //       { withCredentials: true }
+  //     );
+
+  //     // Check if the response contains order data (successful order creation)
+  //     const responseData = response.data as { order?: { orderNumber: string } };
+  //     if (responseData.order && responseData.order.orderNumber) {
+  //       alert(
+  //         "Order placed successfully! Order ID: " +
+  //           responseData.order.orderNumber
+  //       );
+  //       router.push("/orders");
+  //     } else {
+  //       // Handle case where order creation failed
+  //       alert("Order creation failed. Please try again.");
+  //     }
+  //   } catch (error: unknown) {
+  //     console.error("Checkout error:", error);
+
+  //     // Log the full error details for debugging
+  //     if (error && typeof error === "object" && "response" in error) {
+  //       const response = error.response as {
+  //         status?: number;
+  //         data?: unknown;
+  //         headers?: unknown;
+  //       };
+  //       console.error("Response status:", response?.status);
+  //       console.error("Response data:", response?.data);
+  //       console.error("Response headers:", response?.headers);
+  //     }
+
+  //     const errorMessage =
+  //       error && typeof error === "object" && "response" in error
+  //         ? (error.response as { data?: { message?: string; error?: string } })
+  //             ?.data?.message ||
+  //           (error.response as { data?: { message?: string; error?: string } })
+  //             ?.data?.error ||
+  //           "Checkout failed. Please try again."
+  //         : "Checkout failed. Please try again.";
+  //     alert(errorMessage);
+  //   } finally {
+  //     setProcessing(false);
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,22 +365,33 @@ const CheckoutPage = () => {
 
       const pricing = {
         subtotal: cart.reduce((sum, item) => sum + item.total, 0),
-        tax: 0, // You can add tax calculation logic
+        tax: 0,
         shipping: selectedShipping?.price || 0,
-        discount: 0, // You can add discount logic
+        discount: 0,
         total:
           cart.reduce((sum, item) => sum + item.total, 0) +
           (selectedShipping?.price || 0),
       };
 
+      // Use billing address for shipping if checkbox is checked
+      const shippingAddress = form.shippingInfo.useBillingAddress
+        ? form.customerInfo.address
+        : form.shippingInfo.address;
+
+      // Clean the card number before sending
+      const cleanCardNumber = form.paymentData.cardNumber.replace(/\s/g, "");
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/payment/process`,
         {
-          paymentData: form.paymentData,
+          paymentData: {
+            ...form.paymentData,
+            cardNumber: cleanCardNumber, // Send clean card number
+          },
           customerInfo: form.customerInfo,
           shippingInfo: {
             method: selectedShipping?.name || "Standard Shipping",
-            address: form.shippingInfo.address,
+            address: shippingAddress,
           },
           cartItems: cart,
           pricing,
@@ -252,9 +413,26 @@ const CheckoutPage = () => {
       }
     } catch (error: unknown) {
       console.error("Checkout error:", error);
+
+      // Log the full error details for debugging
+      if (error && typeof error === "object" && "response" in error) {
+        const response = error.response as {
+          status?: number;
+          data?: unknown;
+          headers?: unknown;
+        };
+        console.error("Response status:", response?.status);
+        console.error("Response data:", response?.data);
+        console.error("Response headers:", response?.headers);
+      }
+
       const errorMessage =
         error && typeof error === "object" && "response" in error
-          ? (error.response as { data?: { message?: string } })?.data?.message
+          ? (error.response as { data?: { message?: string; error?: string } })
+              ?.data?.message ||
+            (error.response as { data?: { message?: string; error?: string } })
+              ?.data?.error ||
+            "Checkout failed. Please try again."
           : "Checkout failed. Please try again.";
       alert(errorMessage);
     } finally {
@@ -523,108 +701,112 @@ const CheckoutPage = () => {
                 <label className="flex items-center mb-3">
                   <input
                     type="checkbox"
-                    checked={true}
+                    checked={form.shippingInfo.useBillingAddress}
+                    onChange={(e) =>
+                      handleUseBillingAddressChange(e.target.checked)
+                    }
                     className="mr-2 text-[var(--green)] focus:ring-[var(--green)]"
-                    readOnly
                   />
                   <span className="text-sm text-gray-600">
                     Same as billing address
                   </span>
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Street Address *
-                    </label>
-                    <input
-                      type="text"
-                      value={form.shippingInfo.address.street}
-                      onChange={(e) =>
-                        handleAddressChange(
-                          "shippingInfo",
-                          "street",
-                          e.target.value
-                        )
-                      }
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
-                      required
-                    />
+                {!form.shippingInfo.useBillingAddress && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Street Address *
+                      </label>
+                      <input
+                        type="text"
+                        value={form.shippingInfo.address.street}
+                        onChange={(e) =>
+                          handleAddressChange(
+                            "shippingInfo",
+                            "street",
+                            e.target.value
+                          )
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        value={form.shippingInfo.address.city}
+                        onChange={(e) =>
+                          handleAddressChange(
+                            "shippingInfo",
+                            "city",
+                            e.target.value
+                          )
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        State *
+                      </label>
+                      <input
+                        type="text"
+                        value={form.shippingInfo.address.state}
+                        onChange={(e) =>
+                          handleAddressChange(
+                            "shippingInfo",
+                            "state",
+                            e.target.value
+                          )
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        ZIP Code *
+                      </label>
+                      <input
+                        type="text"
+                        value={form.shippingInfo.address.zipCode}
+                        onChange={(e) =>
+                          handleAddressChange(
+                            "shippingInfo",
+                            "zipCode",
+                            e.target.value
+                          )
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Country *
+                      </label>
+                      <select
+                        value={form.shippingInfo.address.country}
+                        onChange={(e) =>
+                          handleAddressChange(
+                            "shippingInfo",
+                            "country",
+                            e.target.value
+                          )
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
+                      >
+                        <option value="US">United States</option>
+                        <option value="CA">Canada</option>
+                        <option value="UK">United Kingdom</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      value={form.shippingInfo.address.city}
-                      onChange={(e) =>
-                        handleAddressChange(
-                          "shippingInfo",
-                          "city",
-                          e.target.value
-                        )
-                      }
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      State *
-                    </label>
-                    <input
-                      type="text"
-                      value={form.shippingInfo.address.state}
-                      onChange={(e) =>
-                        handleAddressChange(
-                          "shippingInfo",
-                          "state",
-                          e.target.value
-                        )
-                      }
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ZIP Code *
-                    </label>
-                    <input
-                      type="text"
-                      value={form.shippingInfo.address.zipCode}
-                      onChange={(e) =>
-                        handleAddressChange(
-                          "shippingInfo",
-                          "zipCode",
-                          e.target.value
-                        )
-                      }
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Country *
-                    </label>
-                    <select
-                      value={form.shippingInfo.address.country}
-                      onChange={(e) =>
-                        handleAddressChange(
-                          "shippingInfo",
-                          "country",
-                          e.target.value
-                        )
-                      }
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--green)]"
-                    >
-                      <option value="US">United States</option>
-                      <option value="CA">Canada</option>
-                      <option value="UK">United Kingdom</option>
-                    </select>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 

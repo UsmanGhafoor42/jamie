@@ -26,6 +26,7 @@ interface OrderItem {
   size?: string;
   sizeAndQuantity?: Record<string, number>;
   colorsName?: string;
+  color?: string;
   options?: string[];
   quantity: number;
   unitPrice: number;
@@ -540,6 +541,36 @@ const AdminOrderManagement = () => {
                                 height={24}
                                 className="object-cover w-full h-full"
                               />
+                            ) : item.imprintFiles &&
+                              item.imprintFiles.length > 0 ? (
+                              <div className="relative w-full h-full">
+                                {item.imprintFiles.length === 1 ? (
+                                  <Image
+                                    src={item.imprintFiles[0]}
+                                    alt={`${item.title} - Imprint`}
+                                    width={24}
+                                    height={24}
+                                    className="object-cover w-full h-full"
+                                  />
+                                ) : (
+                                  <div className="grid grid-cols-2 gap-0 w-full h-full">
+                                    {item.imprintFiles
+                                      .slice(0, 4)
+                                      .map((file, imgIndex) => (
+                                        <Image
+                                          key={imgIndex}
+                                          src={file}
+                                          alt={`${item.title} - Imprint ${
+                                            imgIndex + 1
+                                          }`}
+                                          width={12}
+                                          height={12}
+                                          className="object-cover w-full h-full"
+                                        />
+                                      ))}
+                                  </div>
+                                )}
+                              </div>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
                                 No Img
@@ -547,7 +578,35 @@ const AdminOrderManagement = () => {
                             )}
                           </div>
                           <div className="text-sm text-gray-900 truncate max-w-[150px]">
-                            {item.title}
+                            <div className="font-medium">{item.title}</div>
+                            <div className="text-xs text-gray-500">
+                              {item.size ? (
+                                <span>Size: {item.size}</span>
+                              ) : item.sizeAndQuantity &&
+                                Object.keys(item.sizeAndQuantity).length > 0 ? (
+                                <span>
+                                  Sizes:{" "}
+                                  {Object.entries(item.sizeAndQuantity)
+                                    .filter(([, qty]) => qty > 0)
+                                    .map(([size, qty]) => `${size}(${qty})`)
+                                    .join(", ")}
+                                </span>
+                              ) : null}
+                              {item.colorsName && (
+                                <span className="ml-2">
+                                  • Color: {item.colorsName}
+                                </span>
+                              )}
+                              {item.color && (
+                                <span className="ml-2 inline-flex items-center gap-1">
+                                  •{" "}
+                                  <div
+                                    className="w-2 h-2 rounded-full border border-gray-300"
+                                    style={{ backgroundColor: item.color }}
+                                  ></div>
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}

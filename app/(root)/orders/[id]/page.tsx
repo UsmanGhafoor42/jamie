@@ -15,6 +15,7 @@ import {
   MapPin,
   CreditCard,
   RotateCcw,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -25,6 +26,7 @@ interface OrderItem {
   size?: string;
   sizeAndQuantity?: Record<string, number>;
   colorsName?: string;
+  color?: string;
   options?: string[];
   quantity: number;
   unitPrice: number;
@@ -169,6 +171,7 @@ const OrderDetailsPage = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [reordering, setReordering] = useState(false);
+  const [showImprintModal, setShowImprintModal] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && params.id) {
@@ -296,6 +299,42 @@ const OrderDetailsPage = () => {
                           height={64}
                           className="object-cover w-full h-full"
                         />
+                      ) : item.imprintFiles && item.imprintFiles.length > 0 ? (
+                        <div className="relative w-full h-full">
+                          {item.imprintFiles.length === 1 ? (
+                            <Image
+                              src={item.imprintFiles[0]}
+                              alt={`${item.title} - Imprint`}
+                              width={64}
+                              height={64}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <div className="grid grid-cols-2 gap-0.5 w-full h-full">
+                              {item.imprintFiles
+                                .slice(0, 4)
+                                .map((file, imgIndex) => (
+                                  <Image
+                                    key={imgIndex}
+                                    src={file}
+                                    alt={`${item.title} - Imprint ${
+                                      imgIndex + 1
+                                    }`}
+                                    width={32}
+                                    height={32}
+                                    className="object-cover w-full h-full"
+                                  />
+                                ))}
+                            </div>
+                          )}
+                          {item.imprintFiles.length > 4 && (
+                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                              <span className="text-white text-xs font-medium">
+                                +{item.imprintFiles.length - 4}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
                           No Image
@@ -315,16 +354,37 @@ const OrderDetailsPage = () => {
                           <span className="font-medium">Unit Price:</span> $
                           {item.unitPrice.toFixed(2)}
                         </div>
-                        {item.size && (
+                        {item.size ? (
                           <div>
                             <span className="font-medium">Size:</span>{" "}
                             {item.size}
                           </div>
-                        )}
+                        ) : item.sizeAndQuantity &&
+                          Object.keys(item.sizeAndQuantity).length > 0 ? (
+                          <div>
+                            <span className="font-medium">Sizes:</span>{" "}
+                            {Object.entries(item.sizeAndQuantity)
+                              .filter(([, qty]) => qty > 0)
+                              .map(([size, qty]) => `${size} (${qty})`)
+                              .join(", ")}
+                          </div>
+                        ) : null}
                         {item.colorsName && (
                           <div>
                             <span className="font-medium">Color:</span>{" "}
                             {item.colorsName}
+                          </div>
+                        )}
+                        {item.color && (
+                          <div>
+                            <span className="font-medium">Color Code:</span>{" "}
+                            <span className="inline-flex items-center gap-2">
+                              <div
+                                className="w-4 h-4 rounded-full border border-gray-300"
+                                style={{ backgroundColor: item.color }}
+                              ></div>
+                              {item.color}
+                            </span>
                           </div>
                         )}
                         {item.options && item.options.length > 0 && (
@@ -337,6 +397,29 @@ const OrderDetailsPage = () => {
                           <div className="col-span-2">
                             <span className="font-medium">Notes:</span>{" "}
                             {item.orderNotes}
+                          </div>
+                        )}
+                        {item.imprintLocations &&
+                          item.imprintLocations.length > 0 && (
+                            <div className="col-span-2">
+                              <span className="font-medium">
+                                Imprint Locations:
+                              </span>{" "}
+                              {item.imprintLocations.join(", ")}
+                            </div>
+                          )}
+                        {item.imprintFiles && item.imprintFiles.length > 0 && (
+                          <div className="col-span-2">
+                            <span className="font-medium">Imprint Files:</span>{" "}
+                            <button
+                              onClick={() =>
+                                setShowImprintModal(`${item.title}-${index}`)
+                              }
+                              className="text-blue-600 hover:text-blue-800 underline"
+                            >
+                              View {item.imprintFiles.length} file
+                              {item.imprintFiles.length > 1 ? "s" : ""}
+                            </button>
                           </div>
                         )}
                       </div>
@@ -577,6 +660,53 @@ const OrderDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Imprint Files Modal */}
+      {showImprintModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Imprint Files
+                </h3>
+                <button
+                  onClick={() => setShowImprintModal(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {order?.items
+                  .find(
+                    (item, index) =>
+                      `${item.title}-${index}` === showImprintModal
+                  )
+                  ?.imprintFiles?.map((file, fileIndex) => (
+                    <div
+                      key={fileIndex}
+                      className="border border-gray-200 rounded-lg overflow-hidden"
+                    >
+                      <Image
+                        src={file}
+                        alt={`Imprint File ${fileIndex + 1}`}
+                        width={300}
+                        height={300}
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="p-3">
+                        <p className="text-sm text-gray-600">
+                          File {fileIndex + 1}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

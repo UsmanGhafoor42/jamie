@@ -22,6 +22,7 @@ interface OrderItem {
   size?: string;
   sizeAndQuantity?: Record<string, number>;
   colorsName?: string;
+  color?: string;
   options?: string[];
   quantity: number;
   unitPrice: number;
@@ -299,6 +300,36 @@ const OrderHistoryTable = () => {
                               height={32}
                               className="object-cover w-full h-full"
                             />
+                          ) : item.imprintFiles &&
+                            item.imprintFiles.length > 0 ? (
+                            <div className="relative w-full h-full">
+                              {item.imprintFiles.length === 1 ? (
+                                <Image
+                                  src={item.imprintFiles[0]}
+                                  alt={`${item.title} - Imprint`}
+                                  width={32}
+                                  height={32}
+                                  className="object-cover w-full h-full"
+                                />
+                              ) : (
+                                <div className="grid grid-cols-2 gap-0 w-full h-full">
+                                  {item.imprintFiles
+                                    .slice(0, 4)
+                                    .map((file, imgIndex) => (
+                                      <Image
+                                        key={imgIndex}
+                                        src={file}
+                                        alt={`${item.title} - Imprint ${
+                                          imgIndex + 1
+                                        }`}
+                                        width={16}
+                                        height={16}
+                                        className="object-cover w-full h-full"
+                                      />
+                                    ))}
+                                </div>
+                              )}
+                            </div>
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
                               No Img
@@ -311,6 +342,31 @@ const OrderHistoryTable = () => {
                           </div>
                           <div className="text-xs text-gray-500">
                             Qty: {item.quantity} • ${item.unitPrice.toFixed(2)}
+                            {item.size ? (
+                              <span> • Size: {item.size}</span>
+                            ) : item.sizeAndQuantity &&
+                              Object.keys(item.sizeAndQuantity).length > 0 ? (
+                              <span>
+                                {" "}
+                                • Sizes:{" "}
+                                {Object.entries(item.sizeAndQuantity)
+                                  .filter(([, qty]) => qty > 0)
+                                  .map(([size, qty]) => `${size}(${qty})`)
+                                  .join(", ")}
+                              </span>
+                            ) : null}
+                            {item.colorsName && (
+                              <span> • Color: {item.colorsName}</span>
+                            )}
+                            {item.color && (
+                              <span className="inline-flex items-center gap-1">
+                                •{" "}
+                                <div
+                                  className="w-2 h-2 rounded-full border border-gray-300"
+                                  style={{ backgroundColor: item.color }}
+                                ></div>
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
