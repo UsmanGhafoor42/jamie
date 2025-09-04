@@ -25,7 +25,7 @@ const GANG_SHEET_SIZES = [
   { label: '10" x 10"', value: "10x10", price: 9.0 },
   { label: '10" x 12"', value: "10x12", price: 9.5 },
   { label: '11" x 11"', value: "11x11", price: 10.0 },
-  { label: '12" x 17"', value: "12x17", price: 10.0 },
+  { label: '12" x 17"', value: "12x17", price: 12.0 },
 ];
 
 const OPTIONS = [
