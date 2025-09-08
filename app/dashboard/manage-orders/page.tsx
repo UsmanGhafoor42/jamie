@@ -314,6 +314,40 @@ const AdminOrderManagement = () => {
     }
   };
 
+  const handleExportSingle = async (orderId: string, orderNumber: string) => {
+    try {
+      const tryDownload = async (url: string) =>
+        await axios.get(url, {
+          withCredentials: true,
+          responseType: "blob",
+        });
+
+      // Prefer admin route (to match other admin endpoints); fall back to non-admin if needed
+      const adminUrl = `${process.env.NEXT_PUBLIC_API_URL}/admin/orders/${orderId}/export`;
+      const nonAdminUrl = `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/export`;
+
+      let response;
+      try {
+        response = await tryDownload(adminUrl);
+      } catch (err) {
+        response = await tryDownload(nonAdminUrl);
+      }
+
+      const url = window.URL.createObjectURL(
+        new Blob([response.data as BlobPart])
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `order-${orderNumber}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error exporting order:", error);
+      alert("Failed to export this order");
+    }
+  };
+
   const startEditing = (order: Order) => {
     setEditingOrder(order._id);
     setEditingStatus(order.status);
@@ -644,6 +678,16 @@ const AdminOrderManagement = () => {
                         <Eye className="w-4 h-4" />
                         View Details
                       </Link>
+
+                      <button
+                        onClick={() =>
+                          handleExportSingle(order._id, order.orderNumber)
+                        }
+                        className="flex items-center gap-1 text-green-600 hover:text-green-700 text-sm font-medium"
+                      >
+                        <Download className="w-4 h-4" />
+                        Export CSV
+                      </button>
 
                       {editingOrder === order._id ? (
                         <div className="space-y-2">
