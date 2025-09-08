@@ -329,7 +329,7 @@ const AdminOrderManagement = () => {
       let response;
       try {
         response = await tryDownload(adminUrl);
-      } catch (err) {
+      } catch {
         response = await tryDownload(nonAdminUrl);
       }
 
