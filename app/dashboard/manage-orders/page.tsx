@@ -348,6 +348,28 @@ const AdminOrderManagement = () => {
     }
   };
 
+  const handleDownloadPDF = async (orderId: string, orderNumber: string) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/orders/${orderId}/pdf`,
+        {
+          withCredentials: true,
+          responseType: "blob",
+        }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `order-${orderNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Failed to download PDF");
+    }
+  };
+
   const startEditing = (order: Order) => {
     setEditingOrder(order._id);
     setEditingStatus(order.status);
@@ -673,7 +695,7 @@ const AdminOrderManagement = () => {
                     <div className="flex flex-col gap-2">
                       <Link
                         href={`/dashboard/manage-orders/${order._id}`}
-                        className="flex items-center gap-1 text-[var(--green)] hover:text-green-600 text-sm font-medium"
+                        className="flex items-center gap-1 text-[var(--green)] hover:text-green-600 text-sm font-medium cursor-pointer"
                       >
                         <Eye className="w-4 h-4" />
                         View Details
@@ -683,7 +705,7 @@ const AdminOrderManagement = () => {
                         onClick={() =>
                           handleExportSingle(order._id, order.orderNumber)
                         }
-                        className="flex items-center gap-1 text-green-600 hover:text-green-700 text-sm font-medium"
+                        className="flex items-center gap-1 text-green-600 hover:text-green-700 text-sm font-medium cursor-pointer"
                       >
                         <Download className="w-4 h-4" />
                         Export CSV
@@ -727,13 +749,26 @@ const AdminOrderManagement = () => {
                           </div>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => startEditing(order)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                          Update Status
-                        </button>
+                        <>
+                          <button
+                            onClick={() => startEditing(order)}
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
+                            aria-label="Update Status"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                            Update Status
+                          </button>
+                          <button
+                            onClick={() => handleDownloadPDF(order._id, order.orderNumber)}
+                            className="flex items-center gap-1 text-indigo-600 hover:text-indigo-700 text-sm font-medium cursor-pointer"
+                            aria-label={`Download PDF for order ${order.orderNumber}`}
+                            title="Download Order PDF"
+                            style={{ marginTop: 4 }}
+                          >
+                            <Download className="w-4 h-4" />
+                            Download PDF
+                          </button>
+                        </>
                       )}
                     </div>
                   </td>

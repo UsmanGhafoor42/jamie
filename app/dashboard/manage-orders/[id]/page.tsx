@@ -18,6 +18,7 @@ import {
   X,
   User,
   FileText,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -347,6 +348,24 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
+  const downloadImage = async (imageUrl: string, filename: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      alert('Failed to download image');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -426,40 +445,66 @@ const AdminOrderDetailsPage = () => {
                     key={index}
                     className="flex items-start gap-4 p-4 border border-gray-100 rounded-lg"
                   >
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative group">
                       {item.imageUrl ? (
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.title}
-                          width={64}
-                          height={64}
-                          className="object-cover w-full h-full"
-                        />
+                        <>
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.title}
+                            width={64}
+                            height={64}
+                            className="object-cover w-full h-full"
+                          />
+                          <button
+                            onClick={() => downloadImage(item.imageUrl!, `${item.title}-product.jpg`)}
+                            className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
+                            title="Download product image"
+                          >
+                            <Download className="w-4 h-4 text-white" />
+                          </button>
+                        </>
                       ) : item.imprintFiles && item.imprintFiles.length > 0 ? (
                         <div className="relative w-full h-full">
                           {item.imprintFiles.length === 1 ? (
-                            <Image
-                              src={item.imprintFiles[0]}
-                              alt={`${item.title} - Imprint`}
-                              width={64}
-                              height={64}
-                              className="object-cover w-full h-full"
-                            />
+                            <>
+                              <Image
+                                src={item.imprintFiles[0]}
+                                alt={`${item.title} - Imprint`}
+                                width={64}
+                                height={64}
+                                className="object-cover w-full h-full"
+                              />
+                              <button
+                                onClick={() => downloadImage(item.imprintFiles![0], `${item.title}-imprint.jpg`)}
+                                className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                title="Download imprint image"
+                              >
+                                <Download className="w-4 h-4 text-white" />
+                              </button>
+                            </>
                           ) : (
                             <div className="grid grid-cols-2 gap-0.5 w-full h-full">
                               {item.imprintFiles
                                 .slice(0, 4)
                                 .map((file, imgIndex) => (
-                                  <Image
-                                    key={imgIndex}
-                                    src={file}
-                                    alt={`${item.title} - Imprint ${
-                                      imgIndex + 1
-                                    }`}
-                                    width={32}
-                                    height={32}
-                                    className="object-cover w-full h-full"
-                                  />
+                                  <div key={imgIndex} className="relative">
+                                    <Image
+                                      src={file}
+                                      alt={`${item.title} - Imprint ${
+                                        imgIndex + 1
+                                      }`}
+                                      width={32}
+                                      height={32}
+                                      className="object-cover w-full h-full"
+                                    />
+                                    <button
+                                      onClick={() => downloadImage(file, `${item.title}-imprint-${imgIndex + 1}.jpg`)}
+                                      className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                      title="Download imprint image"
+                                    >
+                                      <Download className="w-3 h-3 text-white" />
+                                    </button>
+                                  </div>
                                 ))}
                             </div>
                           )}
@@ -1054,13 +1099,22 @@ const AdminOrderDetailsPage = () => {
                       key={fileIndex}
                       className="border border-gray-200 rounded-lg overflow-hidden"
                     >
-                      <Image
-                        src={file}
-                        alt={`Imprint File ${fileIndex + 1}`}
-                        width={300}
-                        height={300}
-                        className="w-full h-48 object-cover"
-                      />
+                      <div className="relative">
+                        <Image
+                          src={file}
+                          alt={`Imprint File ${fileIndex + 1}`}
+                          width={300}
+                          height={300}
+                          className="w-full h-48 object-cover"
+                        />
+                        <button
+                          onClick={() => downloadImage(file, `imprint-file-${fileIndex + 1}.jpg`)}
+                          className="absolute top-2 right-2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-2 rounded-full shadow-md transition-all duration-200 flex items-center gap-1"
+                          title="Download image"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      </div>
                       <div className="p-3">
                         <p className="text-sm text-gray-600">
                           File {fileIndex + 1}
