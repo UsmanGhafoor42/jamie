@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 // Set NEXT_PUBLIC_API_URL in your .env file, e.g.
 // NEXT_PUBLIC_API_URL=http://localhost:5000/api
@@ -36,7 +37,7 @@ const Page = () => {
     setLoading(true);
     setError(null);
     if (!API_URL) {
-      setError(
+      toast.error(
         "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
       );
       setLoading(false);
@@ -46,14 +47,16 @@ const Page = () => {
       await axios.post(`${API_URL}/auth/register`, form, {
         withCredentials: true, // send cookies if backend uses them
       });
+      toast.success("Registration successful! Please login to continue.");
       router.push("/auth/login");
     } catch (error: unknown) {
       const err = error as AxiosErrorLike;
-      setError(
+      const errorMessage =
         err.response?.data?.message ||
-          err.message ||
-          "Register failed. Please try again."
-      );
+        err.message ||
+        "Register failed. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -76,11 +79,11 @@ const Page = () => {
         <h2 className="text-2xl font-bold my-6 text-center uppercase">
           Register
         </h2>
-        {error && (
+        {/* {error && (
           <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
             {error}
           </div>
-        )}
+        )} */}
         <div className="mb-4">
           <label htmlFor="fullname" className="block text-gray-700 mb-2">
             Full Name

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useUser } from "../../../hooks/useAuth";
 import axios from "axios";
 import Image from "next/image";
+import toast from "react-hot-toast";
 import {
   Loader2,
   Package,
@@ -274,9 +275,10 @@ const AdminOrderManagement = () => {
       setEditingOrder(null);
       setEditingStatus("");
       setEditingNote("");
+      toast.success("Order status updated successfully");
     } catch (error) {
       console.error("Error updating order status:", error);
-      alert("Failed to update order status");
+      toast.error("Failed to update order status");
     }
   };
 
@@ -308,9 +310,10 @@ const AdminOrderManagement = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      toast.success("Orders exported successfully");
     } catch (error) {
       console.error("Error exporting orders:", error);
-      alert("Failed to export orders");
+      toast.error("Failed to export orders");
     }
   };
 
@@ -342,9 +345,10 @@ const AdminOrderManagement = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      toast.success(`Order ${orderNumber} exported successfully`);
     } catch (error) {
       console.error("Error exporting order:", error);
-      alert("Failed to export this order");
+      toast.error("Failed to export this order");
     }
   };
 
@@ -357,16 +361,19 @@ const AdminOrderManagement = () => {
           responseType: "blob",
         }
       );
-      const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
+      const url = window.URL.createObjectURL(
+        new Blob([response.data as BlobPart])
+      );
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", `order-${orderNumber}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      toast.success(`Order ${orderNumber} PDF downloaded successfully`);
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      alert("Failed to download PDF");
+      toast.error("Failed to download PDF");
     }
   };
 
@@ -759,7 +766,9 @@ const AdminOrderManagement = () => {
                             Update Status
                           </button>
                           <button
-                            onClick={() => handleDownloadPDF(order._id, order.orderNumber)}
+                            onClick={() =>
+                              handleDownloadPDF(order._id, order.orderNumber)
+                            }
                             className="flex items-center gap-1 text-indigo-600 hover:text-indigo-700 text-sm font-medium cursor-pointer"
                             aria-label={`Download PDF for order ${order.orderNumber}`}
                             title="Download Order PDF"

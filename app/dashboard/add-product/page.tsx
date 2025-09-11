@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
 import EditProductModal from "../../../components/shared/EditProductModal";
+import toast from "react-hot-toast";
 
 interface ColorSwatch {
   name: string;
@@ -512,9 +513,10 @@ const AddProductPage: React.FC = () => {
       try {
         await axios.delete(`${API_URL}/apparel/products/${productId}`);
         loadProducts(); // Reload the products list
+        toast.success("Product deleted successfully");
       } catch (err) {
         console.error("Error deleting product:", err);
-        alert("Failed to delete product");
+        toast.error("Failed to delete product");
       }
     }
   };

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 // Set NEXT_PUBLIC_API_URL in your .env file, e.g.
 // NEXT_PUBLIC_API_URL=http://localhost:5000/api
@@ -33,7 +34,7 @@ const Page = () => {
     setLoading(true);
     setError(null);
     if (!API_URL) {
-      setError(
+      toast.error(
         "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
       );
       setLoading(false);
@@ -42,13 +43,15 @@ const Page = () => {
     try {
       await axios.post(`${API_URL}/auth/forgot-password`, form);
       setSubmitted(true);
+      toast.success("Password reset email sent! Check your inbox.");
     } catch (error: unknown) {
       const err = error as AxiosErrorLike;
-      setError(
+      const errorMessage =
         err.response?.data?.message ||
-          err.message ||
-          "Failed to send reset email. Please try again."
-      );
+        err.message ||
+        "Failed to send reset email. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -84,11 +87,11 @@ const Page = () => {
               Don’t worry! It happens. Please enter the email associated with
               your account, then check your email for verification.
             </p>
-            {error && (
+            {/* {error && (
               <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
                 {error}
               </div>
-            )}
+            )} */}
             <form onSubmit={handleSubmit}>
               <div className="mb-4 mt-4">
                 <label htmlFor="email" className="block text-gray-700 mb-2">

@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 // Sticker locations and prices
 const STICKER_LOCATIONS = [
@@ -255,11 +256,11 @@ const Page = () => {
         }
       );
 
-      alert("Order added to cart!");
+      toast.success("Order added to cart!");
       router.push("/cart");
     } catch (error) {
       console.error("Add to cart failed:", error);
-      alert("Failed to add to cart. Please login or try again.");
+      toast.error("Failed to add to cart. Please login or try again.");
     }
   };
 

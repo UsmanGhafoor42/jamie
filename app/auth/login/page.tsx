@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useAuth";
+import toast from "react-hot-toast";
 
 // Set NEXT_PUBLIC_API_URL in your .env file, e.g.
 // NEXT_PUBLIC_API_URL=http://localhost:5000/api
@@ -39,7 +40,7 @@ const Page = () => {
     setLoadingSubmit(true);
     setError(null);
     if (!API_URL) {
-      setError(
+      toast.error(
         "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
       );
       setLoadingSubmit(false);
@@ -49,17 +50,19 @@ const Page = () => {
       await axios.post(`${API_URL}/auth/login`, form, {
         withCredentials: true,
       });
+      toast.success("Login successful! Welcome back!");
       window.location.reload(); // reload to update user state and trigger middleware
     } catch (error: unknown) {
       const err = error as {
         response?: { data?: { message?: string } };
         message?: string;
       };
-      setError(
+      const errorMessage =
         err.response?.data?.message ||
-          err.message ||
-          "Login failed. Please try again."
-      );
+        err.message ||
+        "Login failed. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoadingSubmit(false);
     }
@@ -82,11 +85,11 @@ const Page = () => {
           />
         </Link>
         <h2 className="text-2xl font-bold my-6 text-center uppercase">Login</h2>
-        {error && (
+        {/* {error && (
           <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
             {error}
           </div>
-        )}
+        )} */}
         <div className="mb-4">
           <label htmlFor="email" className="block text-gray-700 mb-2">
             Email

@@ -11,6 +11,7 @@ import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 const UV_STICKER_SIZES = [
   { label: '1" x 1"', value: "1x1", price: 0.89 },
@@ -118,10 +119,10 @@ const Page = () => {
           withCredentials: true, // send cookies (JWT) automatically
         }
       );
-      alert("Order added to cart!");
+      toast.success("Order added to cart!");
       router.push("/cart");
     } catch {
-      alert("Failed to add to cart. Please login or try again.");
+      toast.error("Failed to add to cart. Please login or try again.");
     }
   };
 

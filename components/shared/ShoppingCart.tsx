@@ -5,6 +5,7 @@ import { Trash2, Loader2 } from "lucide-react";
 import axios from "axios";
 import { useUser } from "../../hooks/useAuth";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 interface CartItem {
   _id: string;
@@ -57,7 +58,7 @@ const ShoppingCart: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!user) {
-      alert("Please login to delete cart items");
+      toast.error("Please login to delete cart items");
       return;
     }
 
@@ -74,6 +75,7 @@ const ShoppingCart: React.FC = () => {
         newSet.delete(id);
         return newSet;
       });
+      toast.success("Item removed from cart");
     } catch (error) {
       console.error("Error deleting cart item:", error);
       if (error && typeof error === "object" && "response" in error) {
@@ -83,7 +85,7 @@ const ShoppingCart: React.FC = () => {
         console.error("Response data:", axiosError.response?.data);
         console.error("Response status:", axiosError.response?.status);
       }
-      alert("Failed to delete item. Please try again.");
+      toast.error("Failed to delete item. Please try again.");
     } finally {
       setDeleting(null);
     }
@@ -111,7 +113,7 @@ const ShoppingCart: React.FC = () => {
 
   const handleDeleteMultiple = async () => {
     if (!user) {
-      alert("Please login to delete cart items");
+      toast.error("Please login to delete cart items");
       return;
     }
 
@@ -130,9 +132,10 @@ const ShoppingCart: React.FC = () => {
 
       setCart((prev) => prev.filter((item) => !selectedItems.has(item._id)));
       setSelectedItems(new Set());
+      toast.success(`${selectedItems.size} items removed from cart`);
     } catch (error) {
       console.error("Error deleting multiple cart items:", error);
-      alert("Failed to delete selected items. Please try again.");
+      toast.error("Failed to delete selected items. Please try again.");
     } finally {
       setDeleteMultipleLoading(false);
     }

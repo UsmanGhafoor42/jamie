@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useUser } from "../../../../hooks/useAuth";
 import axios from "axios";
 import Image from "next/image";
+import toast from "react-hot-toast";
 import {
   Loader2,
   Package,
@@ -257,9 +258,10 @@ const AdminOrderDetailsPage = () => {
 
       setEditMode(null);
       setEditingNote("");
+      toast.success("Order status updated successfully");
     } catch (error) {
       console.error("Error updating order status:", error);
-      alert("Failed to update order status");
+      toast.error("Failed to update order status");
     } finally {
       setUpdating(false);
     }
@@ -290,9 +292,10 @@ const AdminOrderDetailsPage = () => {
       );
 
       setEditMode(null);
+      toast.success("Shipping information updated successfully");
     } catch (error) {
       console.error("Error updating shipping info:", error);
-      alert("Failed to update shipping information");
+      toast.error("Failed to update shipping information");
     } finally {
       setUpdating(false);
     }
@@ -315,9 +318,10 @@ const AdminOrderDetailsPage = () => {
       );
 
       setEditMode(null);
+      toast.success("Admin notes updated successfully");
     } catch (error) {
       console.error("Error updating admin notes:", error);
-      alert("Failed to update admin notes");
+      toast.error("Failed to update admin notes");
     } finally {
       setUpdating(false);
     }
@@ -353,7 +357,7 @@ const AdminOrderDetailsPage = () => {
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
@@ -361,8 +365,8 @@ const AdminOrderDetailsPage = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading image:', error);
-      alert('Failed to download image');
+      console.error("Error downloading image:", error);
+      toast.error("Failed to download image");
     }
   };
 
@@ -456,7 +460,12 @@ const AdminOrderDetailsPage = () => {
                             className="object-cover w-full h-full"
                           />
                           <button
-                            onClick={() => downloadImage(item.imageUrl!, `${item.title}-product.jpg`)}
+                            onClick={() =>
+                              downloadImage(
+                                item.imageUrl!,
+                                `${item.title}-product.jpg`
+                              )
+                            }
                             className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
                             title="Download product image"
                           >
@@ -475,7 +484,12 @@ const AdminOrderDetailsPage = () => {
                                 className="object-cover w-full h-full"
                               />
                               <button
-                                onClick={() => downloadImage(item.imprintFiles![0], `${item.title}-imprint.jpg`)}
+                                onClick={() =>
+                                  downloadImage(
+                                    item.imprintFiles![0],
+                                    `${item.title}-imprint.jpg`
+                                  )
+                                }
                                 className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
                                 title="Download imprint image"
                               >
@@ -498,7 +512,14 @@ const AdminOrderDetailsPage = () => {
                                       className="object-cover w-full h-full"
                                     />
                                     <button
-                                      onClick={() => downloadImage(file, `${item.title}-imprint-${imgIndex + 1}.jpg`)}
+                                      onClick={() =>
+                                        downloadImage(
+                                          file,
+                                          `${item.title}-imprint-${
+                                            imgIndex + 1
+                                          }.jpg`
+                                        )
+                                      }
                                       className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
                                       title="Download imprint image"
                                     >
@@ -1108,7 +1129,12 @@ const AdminOrderDetailsPage = () => {
                           className="w-full h-48 object-cover"
                         />
                         <button
-                          onClick={() => downloadImage(file, `imprint-file-${fileIndex + 1}.jpg`)}
+                          onClick={() =>
+                            downloadImage(
+                              file,
+                              `imprint-file-${fileIndex + 1}.jpg`
+                            )
+                          }
                           className="absolute top-2 right-2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-2 rounded-full shadow-md transition-all duration-200 flex items-center gap-1"
                           title="Download image"
                         >

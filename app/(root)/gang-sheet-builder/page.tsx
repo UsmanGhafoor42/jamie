@@ -11,6 +11,7 @@ import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 const GANG_SHEET_SIZES = [
   { label: '11" x 12.5"', value: "11x12.5", price: 5 },
@@ -115,10 +116,10 @@ const Page = () => {
           withCredentials: true, // send cookies (JWT) automatically
         }
       );
-      alert("Order added to cart!");
+      toast.success("Order added to cart!");
       router.push("/cart");
     } catch {
-      alert("Failed to add to cart. Please login or try again.");
+      toast.error("Failed to add to cart. Please login or try again.");
     }
   };
 

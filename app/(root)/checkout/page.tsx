@@ -5,6 +5,7 @@ import { useUser } from "../../../hooks/useAuth";
 import axios from "axios";
 import { Loader2, CreditCard, Truck, Shield, CheckCircle } from "lucide-react";
 import Image from "next/image";
+import toast from "react-hot-toast";
 
 interface CartItem {
   _id: string;
@@ -210,7 +211,7 @@ const CheckoutPage = () => {
       !customerInfo.lastName ||
       !customerInfo.email
     ) {
-      alert("Please fill in all required customer information");
+      toast.error("Please fill in all required customer information");
       return false;
     }
 
@@ -220,7 +221,7 @@ const CheckoutPage = () => {
       !customerInfo.address.state ||
       !customerInfo.address.zipCode
     ) {
-      alert("Please fill in all required billing address information");
+      toast.error("Please fill in all required billing address information");
       return false;
     }
 
@@ -232,7 +233,7 @@ const CheckoutPage = () => {
         !shippingInfo.address.state ||
         !shippingInfo.address.zipCode
       ) {
-        alert("Please fill in all required shipping address information");
+        toast.error("Please fill in all required shipping address information");
         return false;
       }
     }
@@ -243,25 +244,25 @@ const CheckoutPage = () => {
       !paymentData.cvv ||
       !paymentData.cardholderName
     ) {
-      alert("Please fill in all required payment information");
+      toast.error("Please fill in all required payment information");
       return false;
     }
 
     // Validate card number format (basic)
     if (paymentData.cardNumber.replace(/\s/g, "").length < 13) {
-      alert("Please enter a valid card number");
+      toast.error("Please enter a valid card number");
       return false;
     }
 
     // Validate expiration date format
     if (!/^\d{2}\/\d{2}$/.test(paymentData.expirationDate)) {
-      alert("Please enter expiration date in MM/YY format");
+      toast.error("Please enter expiration date in MM/YY format");
       return false;
     }
 
     // Validate CVV
     if (paymentData.cvv.length < 3) {
-      alert("Please enter a valid CVV");
+      toast.error("Please enter a valid CVV");
       return false;
     }
 
@@ -402,14 +403,14 @@ const CheckoutPage = () => {
       // Check if the response contains order data (successful order creation)
       const responseData = response.data as { order?: { orderNumber: string } };
       if (responseData.order && responseData.order.orderNumber) {
-        alert(
+        toast.success(
           "Order placed successfully! Order ID: " +
             responseData.order.orderNumber
         );
         router.push("/orders");
       } else {
         // Handle case where order creation failed
-        alert("Order creation failed. Please try again.");
+        toast.error("Order creation failed. Please try again.");
       }
     } catch (error: unknown) {
       console.error("Checkout error:", error);
@@ -434,7 +435,7 @@ const CheckoutPage = () => {
               ?.data?.error ||
             "Checkout failed. Please try again."
           : "Checkout failed. Please try again.";
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setProcessing(false);
     }

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "../../../hooks/useAuth";
 import axios from "axios";
 import Image from "next/image";
+import toast from "react-hot-toast";
 import {
   Loader2,
   Package,
@@ -185,10 +186,10 @@ const OrderHistoryTable = () => {
         {},
         { withCredentials: true }
       );
-      alert("Items added to cart successfully!");
+      toast.success("Items added to cart successfully!");
     } catch (error) {
       console.error("Error reordering:", error);
-      alert("Failed to add items to cart. Please try again.");
+      toast.error("Failed to add items to cart. Please try again.");
     } finally {
       setReordering(null);
     }

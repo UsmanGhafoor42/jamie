@@ -5,6 +5,7 @@ import React, { Suspense, useState } from "react";
 // If you haven't installed axios, run: npm install axios
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 // Set NEXT_PUBLIC_API_URL in your .env file, e.g.
 // NEXT_PUBLIC_API_URL=http://localhost:5000/api
@@ -40,7 +41,7 @@ function ResetPasswordContent() {
     setLoading(true);
     setError(null);
     if (!API_URL) {
-      setError(
+      toast.error(
         "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
       );
       setLoading(false);
@@ -52,19 +53,24 @@ function ResetPasswordContent() {
         newPassword,
       });
       setSuccess(true);
+      toast.success(
+        "Password reset successful! You can now login with your new password."
+      );
     } catch (error: unknown) {
       const err = error as AxiosErrorLike;
+      let errorMessage = "Something went wrong. Please try again.";
+
       if (err.isAxiosError) {
-        setError(
+        errorMessage =
           err.response?.data?.message ||
-            err.message ||
-            "Something went wrong. Please try again."
-        );
+          err.message ||
+          "Something went wrong. Please try again.";
       } else if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("Something went wrong. Please try again.");
+        errorMessage = error.message;
       }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -106,11 +112,11 @@ function ResetPasswordContent() {
               Please enter your new password below. This link was sent to your
               email.
             </p>
-            {error && (
+            {/* {error && (
               <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
                 {error}
               </div>
-            )}
+            )} */}
             <form onSubmit={handleSubmit}>
               <div className="mb-4 mt-4">
                 <label
