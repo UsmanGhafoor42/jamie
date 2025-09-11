@@ -25,7 +25,6 @@ const Page = () => {
     password: "",
   });
   const [loadingSubmit, setLoadingSubmit] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +37,6 @@ const Page = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoadingSubmit(true);
-    setError(null);
     if (!API_URL) {
       toast.error(
         "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
@@ -61,7 +59,6 @@ const Page = () => {
         err.response?.data?.message ||
         err.message ||
         "Login failed. Please try again.";
-      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoadingSubmit(false);

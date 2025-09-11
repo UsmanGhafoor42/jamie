@@ -19,7 +19,6 @@ const Page = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +31,6 @@ const Page = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
     if (!API_URL) {
       toast.error(
         "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
@@ -50,7 +48,6 @@ const Page = () => {
         err.response?.data?.message ||
         err.message ||
         "Failed to send reset email. Please try again.";
-      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);

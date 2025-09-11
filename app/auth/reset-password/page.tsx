@@ -28,7 +28,6 @@ export default function Page() {
 function ResetPasswordContent() {
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -39,7 +38,6 @@ function ResetPasswordContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
     if (!API_URL) {
       toast.error(
         "API URL is not set. Please set NEXT_PUBLIC_API_URL in your .env file."
@@ -69,7 +67,6 @@ function ResetPasswordContent() {
         errorMessage = error.message;
       }
 
-      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
